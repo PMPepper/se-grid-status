@@ -1,0 +1,7 @@
+﻿"workshopitem"
+{
+	"appid" "244850"
+	"publishedfileid" ""
+	"contentfolder" "C:\\Users\Paul\\source\\repos\\Grid_Status_Screen\\src"
+	"previewfile" "C:\\Users\Paul\\source\\repos\\Grid_Status_Screen\\src\\thumb.jpg"
+}
