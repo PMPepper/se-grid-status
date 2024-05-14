@@ -58,7 +58,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             //TODO persist values/load defaults
             Entries.Add(new ShieldStatusEntry());
-            //Entries.Add(new ShieldStatusEntry());
+            Entries.Add(new InventoryStatusEntry() { Heading = "Ice" });
             //Entries.Add(new ShieldStatusEntry());
             //Entries.Add(new ShieldStatusEntry());
             //Entries.Add(new ShieldStatusEntry());
@@ -138,7 +138,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         public void Dispose()
         {
-            MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"GridStatusApp::Dispose");
+            //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"GridStatusApp::Dispose");
             if (HUDMessage != null)
             {
                 //HUDMessage.TimeToLive = 0;

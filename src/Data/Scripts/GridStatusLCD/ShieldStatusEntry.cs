@@ -52,7 +52,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             Label.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
             Label.Margin = Vector4.UnitY * 8;
 
-            StatusBar = new ProgressBar(0, 1, false, 2);
+            StatusBar = new ProgressBar(0, 1, false, 1);
             StatusBar.Value = 0;
             StatusBar.Label.Text = "";
             StatusBar.Label.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.RIGHT;
@@ -110,7 +110,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         }
 
         public void BlockAdded(IMySlimBlock block) {
-            MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"ShieldStatusEntry::BlockAdded {block}");
+            //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"ShieldStatusEntry::BlockAdded {block}");
 
             if (ShieldGeneratorBlock == null && block.FatBlock != null && IsShieldGeneratorBlock(block.FatBlock))
             {
@@ -138,7 +138,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 if (CheckForShieldGenerator)//if this value is false, there is no point in looking for a shield generator again
                 {
                     CheckForShieldGenerator = false;
-                    MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"find shield block");
+                    //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"find shield block");
                     var grid = Block.CubeGrid;
 
                     //TODO what about connected grids?

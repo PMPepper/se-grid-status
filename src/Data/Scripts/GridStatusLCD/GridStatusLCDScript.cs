@@ -64,7 +64,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         public override void Dispose()
         {
-            MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"GridStatusLCDScript::Dispose");
+            //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"GridStatusLCDScript::Dispose");
             base.Dispose();
 
             try
@@ -82,7 +82,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         void BlockMarkedForClose(IMyEntity ent)
         {
-            MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"GridStatusLCDScript::BlockMarkedForClose");
+            //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"GridStatusLCDScript::BlockMarkedForClose");
             Dispose();
         }
 
