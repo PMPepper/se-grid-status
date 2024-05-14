@@ -15,7 +15,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
     class InventoryStatusEntry : ABlockFilterStatusEntry
     {
-        private string _Heading = "Ice";
+        private string _Heading = "Inventory";
         public string Heading { get { return _Heading; } set { if (Label != null) { Label.Text = value; } _Heading = value; } }
         public bool ShowOnHUD = true;
 
@@ -43,12 +43,6 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         {
             
         }
-
-        override public void Dispose()
-        {
-            base.Dispose();
-        }
-
 
         override public View Init(GridStatusApp app, IMyCubeBlock block, IMyTextSurface surface)
         {

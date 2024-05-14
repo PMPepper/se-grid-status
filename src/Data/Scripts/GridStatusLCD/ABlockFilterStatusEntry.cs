@@ -27,9 +27,9 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         } }
         public MyCubeGrid Grid { get { return Block?.CubeGrid as MyCubeGrid; } }
 
-        private StringMatcher BlockNameFilterMatcher = new StringMatcher("*[ice]*");
-        private StringMatcher GroupNameFilterMatcher = new StringMatcher("*[ice]");
-        private StringMatcher GridNameFilterMatcher = new StringMatcher("*[test]*");
+        private StringMatcher BlockNameFilterMatcher = new StringMatcher("");
+        private StringMatcher GroupNameFilterMatcher = new StringMatcher("");
+        private StringMatcher GridNameFilterMatcher = new StringMatcher("");
 
         public string BlockNameFilter { get { return BlockNameFilterMatcher.Value; } set { BlockNameFilterMatcher.Value = value; } }
         public string GroupNameFilter { get { return GroupNameFilterMatcher.Value; } set { GroupNameFilterMatcher.Value = value; } }
@@ -150,7 +150,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
         }
 
-        protected abstract bool IsPotentiallyValidBlock(IMyCubeBlock block);
+        protected virtual bool IsPotentiallyValidBlock(IMyCubeBlock block)
+        {
+            return BlockNameFilterMatcher.Test((block as IMyTerminalBlock).CustomName);
+        }
 
         public bool TestBlockNameFilter(string str)
         {
