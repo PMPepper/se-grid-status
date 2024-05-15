@@ -152,6 +152,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         protected virtual bool IsPotentiallyValidBlock(IMyCubeBlock block)
         {
+            //TODO check block ownership?
             return BlockNameFilterMatcher.Test((block as IMyTerminalBlock).CustomName);
         }
 

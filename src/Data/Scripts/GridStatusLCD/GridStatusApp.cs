@@ -59,7 +59,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             //TODO persist values/load defaults
             Entries.Add(new ShieldStatusEntry());
             Entries.Add(new InventoryStatusEntry() { Heading = "Ice" });
-            Entries.Add(new GasStatusEntry() { Heading = "Oxygen", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
+            Entries.Add(new OxygenStatusEntry() { Heading = "Oxygen", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
             //Entries.Add(new ShieldStatusEntry());
             //Entries.Add(new ShieldStatusEntry());
             //Entries.Add(new ShieldStatusEntry());
