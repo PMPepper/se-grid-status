@@ -32,7 +32,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private StringMatcher GridNameFilterMatcher = new StringMatcher("");
 
         public string BlockNameFilter { get { return BlockNameFilterMatcher.Value; } set { BlockNameFilterMatcher.Value = value; } }
-        public string GroupNameFilter { get { return GroupNameFilterMatcher.Value; } set { GroupNameFilterMatcher.Value = value; } }
+        public string GroupNameFilter { get { return GroupNameFilterMatcher.Value; } set { if (GroupNameFilterMatcher.Value != value) { GroupNameFilterMatcher.Value = value; UpdateGroups(); } } }
         //a value of "" = self
         public string GridNameFilter { get { return GridNameFilterMatcher.Value; } set { GridNameFilterMatcher.Value = value; } }
 
@@ -187,11 +187,13 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         //Event handlers
         private void OnGroupRemoved(IMyBlockGroup obj)
         {
+            MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"Group removed: {obj.Name}");
             UpdateGroups();
         }
 
         private void OnGroupAdded(IMyBlockGroup obj)
         {
+            MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"Group added: {obj.Name}");
             UpdateGroups();
         }
     }

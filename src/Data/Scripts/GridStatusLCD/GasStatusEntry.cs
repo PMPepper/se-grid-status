@@ -61,13 +61,22 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         {
             base.Update(hudMessageText);
 
+            float totalCapacity = 0;
+            double containsGas = FilteredBlocks.Sum((block) => {
+                var tank = block as IMyGasTank;
+                totalCapacity += tank.Capacity;
+                
+                return tank.Capacity * tank.FilledRatio;
+            });
+
             //TODO
+            StatusBar.Label.Text = $"Hello world {FilteredBlocks.Count}, {containsGas}/{totalCapacity}";
         }
 
-            //TODO actually check the block can contain gas?
-            /*protected override bool IsPotentiallyValidBlock(IMyCubeBlock block)
-            {
-                throw new NotImplementedException();
-            }*/
+        //TODO actually check the block can contain gas?
+        protected override bool IsPotentiallyValidBlock(IMyCubeBlock block)
+        {
+            return block is IMyGasTank && TestBlockNameFilter((block as IMyTerminalBlock).CustomName);
         }
+    }
 }
