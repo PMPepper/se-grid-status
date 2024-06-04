@@ -30,7 +30,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         ScrollView MainView { get; }
         Label MainViewHeader { get; }
 
-        List<IStatusEntry> Entries = new List<IStatusEntry>();
+        List<AStatusEntry> Entries = new List<AStatusEntry>();
 
 
         public GridStatusApp(IMyCubeBlock block, IMyTextSurface surface) : base(block, surface)

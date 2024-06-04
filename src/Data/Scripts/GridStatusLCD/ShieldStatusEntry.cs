@@ -11,7 +11,7 @@ using VRageMath;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    class ShieldStatusEntry : IStatusEntry
+    class ShieldStatusEntry : AStatusEntry
     {
         private string _Heading = "Shields";
         public string Heading { get { return _Heading; } set { if (Label != null) { Label.Text = value; } _Heading = value; } }
@@ -39,7 +39,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private static char[] SPACE_PARENS = new char[3] { ' ', '(', ')' };
         private static char[] FWD_SLASH = new char[1] { '/' };
 
-        public View Init(GridStatusApp app, IMyCubeBlock block, IMyTextSurface surface)
+        override public View Init(GridStatusApp app, IMyCubeBlock block, IMyTextSurface surface)
         {
             App = app;
             Block = block;
@@ -66,7 +66,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             return View;
         }
 
-        public void Update(StringBuilder hudMessageText)
+        override public void Update(StringBuilder hudMessageText)
         {
             var shieldStatus = GetShieldStatus();
             var shieldStatusStr = shieldStatus.ToString();
@@ -102,14 +102,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
         }
 
-        public void Dispose() {
+        override public void Dispose() {
             if (ShieldGeneratorBlock != null)
             {
                 ShieldGeneratorBlock = null;
             }
         }
 
-        public void BlockAdded(IMySlimBlock block) {
+        override public void BlockAdded(IMySlimBlock block) {
             //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"ShieldStatusEntry::BlockAdded {block}");
 
             if (ShieldGeneratorBlock == null && block.FatBlock != null && IsShieldGeneratorBlock(block.FatBlock))
@@ -117,7 +117,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 CheckForShieldGenerator = true;
             }
         }
-        public void BlockRemoved(IMySlimBlock block)
+        override public void BlockRemoved(IMySlimBlock block)
         {
             if(block == ShieldGeneratorBlock)
             {
@@ -125,7 +125,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 CheckForShieldGenerator = true;
             }
         }
-        public void GridChanged(IMyCubeGrid newGrid)
+        override public void GridChanged(IMyCubeGrid newGrid)
         {
 
         }

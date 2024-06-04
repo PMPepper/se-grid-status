@@ -13,7 +13,7 @@ using IngameMyInventoryItem = VRage.Game.ModAPI.Ingame.MyInventoryItem;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    abstract class ABlockFilterStatusEntry : IStatusEntry
+    abstract class ABlockFilterStatusEntry : AStatusEntry
     {
         private IMyCubeBlock _Block;
         public IMyCubeBlock Block { get { return _Block; } protected set {
@@ -72,19 +72,17 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
         }
 
-        public abstract void BlockAdded(IMySlimBlock block);
-        public abstract void BlockRemoved(IMySlimBlock block);
-        virtual public void Dispose()
+        override public void Dispose()
         {
             TerminalSystem = null;
         }
-        public void GridChanged(IMyCubeGrid newGrid)
+        override public void GridChanged(IMyCubeGrid newGrid)
         {
             //update terminal system
             TerminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(Grid);
         }
-        public abstract View Init(GridStatusApp app, IMyCubeBlock block, IMyTextSurface surface);
-        virtual public void Update(StringBuilder hudMessageText)
+        
+        override public void Update(StringBuilder hudMessageText)
         {
             FilteredBlocks.Clear();
             AddedBlocks.Clear();
