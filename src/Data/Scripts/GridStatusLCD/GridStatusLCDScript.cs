@@ -52,7 +52,18 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 return;
             _init = true;
 
-            _app = new GridStatusApp(_block, _surface);
+            //TEMP
+            var state = new GridStatusLCDState();
+            state.Entries.Add(new ShieldStatusEntry());
+            state.Entries.Add(new InventoryStatusEntry() { Heading = "Ice" });
+            state.Entries.Add(new OxygenStatusEntry() { Heading = "Oxygen", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
+
+            //string saveText = MyAPIGateway.Utilities.SerializeToXML(state);
+
+            //(block as IMyTerminalBlock).CustomData = saveText;
+            //END TEMP
+
+            _app = new GridStatusApp(_block, _surface, state);
             _app.Theme.Scale = Math.Min(Math.Max(Math.Min(this.Surface.SurfaceSize.X, this.Surface.SurfaceSize.Y) / 512, 0.4f), 2);
             _app.Cursor.Scale = _app.Theme.Scale;
 

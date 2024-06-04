@@ -30,11 +30,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         ScrollView MainView { get; }
         Label MainViewHeader { get; }
 
-        List<AStatusEntry> Entries = new List<AStatusEntry>();
+        GridStatusLCDState State;
+
+        //List<AStatusEntry> Entries = new List<AStatusEntry>();
 
 
-        public GridStatusApp(IMyCubeBlock block, IMyTextSurface surface) : base(block, surface)
+        public GridStatusApp(IMyCubeBlock block, IMyTextSurface surface, GridStatusLCDState state) : base(block, surface)
         {
+            State = state;
             HUDTextAPI = GridStatusLCDSession.HUDTextAPI; //store local reference
             Block = block;
             SetGrid(block.CubeGrid);
@@ -56,17 +59,9 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             MainViewHeader = new Label("Loading...", 0.6f);
 
-            //TODO persist values/load defaults
-            Entries.Add(new ShieldStatusEntry());
-            Entries.Add(new InventoryStatusEntry() { Heading = "Ice" });
-            Entries.Add(new OxygenStatusEntry() { Heading = "Oxygen", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
-            //Entries.Add(new ShieldStatusEntry());
-            //Entries.Add(new ShieldStatusEntry());
-            //Entries.Add(new ShieldStatusEntry());
-
             MainView.AddChild(MainViewHeader);
             
-            foreach(var entry in Entries)
+            foreach(var entry in state.Entries)
             {
                 if(entry != null)
                 {
@@ -81,7 +76,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         private void OnBlockAdded(IMySlimBlock block)
         {
-            foreach (var entry in Entries)
+            foreach (var entry in State.Entries)
             {
                 entry?.BlockAdded(block);
             }
@@ -89,7 +84,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         private void OnBlockRemoved(IMySlimBlock block)
         {
-            foreach (var entry in Entries)
+            foreach (var entry in State.Entries)
             {
                 entry?.BlockRemoved(block);
             }
@@ -124,7 +119,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             MainViewHeader.Text = $"Status for {grid.CustomName}";
             HUDMessageText.Clear();
 
-            foreach(var entry in Entries)
+            foreach(var entry in State.Entries)
             {
                 entry.Update(HUDMessageText);
             }
@@ -147,7 +142,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 HUDMessage = null;
             }
 
-            foreach (var entry in Entries)
+            foreach (var entry in State.Entries)
             {
                 entry?.Dispose();
             }
@@ -179,7 +174,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 Grid.OnBlockRemoved += OnBlockRemoved;
             }
 
-            foreach (var entry in Entries)
+            foreach (var entry in State.Entries)
             {
                 entry?.GridChanged(newGrid);
             }

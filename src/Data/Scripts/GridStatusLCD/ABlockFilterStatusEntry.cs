@@ -32,16 +32,19 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private StringMatcher GridNameFilterMatcher = new StringMatcher("");
 
         public string BlockNameFilter { get { return BlockNameFilterMatcher.Value; } set { BlockNameFilterMatcher.Value = value; } }
-        public string GroupNameFilter { get { return GroupNameFilterMatcher.Value; } set { if (GroupNameFilterMatcher.Value != value) { GroupNameFilterMatcher.Value = value; UpdateGroups(); } } }
+        public string GroupNameFilter { get { return GroupNameFilterMatcher.Value; } set { if (GroupNameFilterMatcher.Value != value) { GroupNameFilterMatcher.Value = value; groupsDirty = true; } } }
         //a value of "" = self
         public string GridNameFilter { get { return GridNameFilterMatcher.Value; } set { GridNameFilterMatcher.Value = value; } }
 
+        private bool groupsDirty = true;
         //Reuse objects to reduce allocations
         public List<IMyCubeBlock> FilteredBlocks { get; private set; } = new List<IMyCubeBlock>();
         private List<IngameIMyBlockGroup> BlockGroups = new List<IngameIMyBlockGroup>();
         private List<MyCubeGrid> ConnectedGrids = new List<MyCubeGrid>();
+        private List<MyCubeGrid> PrevConnectedGrids = new List<MyCubeGrid>();
         private List<MyCubeGrid> ValidGrids = new List<MyCubeGrid>();
         private HashSet<IMyCubeBlock> AddedBlocks = new HashSet<IMyCubeBlock>();
+        private HashSet<MyCubeGrid> CompareGridsSet = new HashSet<MyCubeGrid>();
 
         private IMyGridTerminalSystem _TerminalSystem;
         public IMyGridTerminalSystem TerminalSystem
@@ -78,8 +81,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         }
         override public void GridChanged(IMyCubeGrid newGrid)
         {
+            groupsDirty = true;
+
             //update terminal system
-            TerminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(Grid);
+            TerminalSystem = newGrid == null ? null : MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(newGrid);
         }
         
         override public void Update(StringBuilder hudMessageText)
@@ -87,6 +92,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             FilteredBlocks.Clear();
             AddedBlocks.Clear();
             ValidGrids.Clear();
+
+            bool hasGroupFilter = !string.IsNullOrEmpty(GroupNameFilter);
 
             //Get valid grids
             if (GridNameFilter == "")
@@ -96,10 +103,15 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
             else//has a grid name filter
             {
+                //switch current and prev connected grids list
+                var newConnectedGrids = PrevConnectedGrids;
+                PrevConnectedGrids = ConnectedGrids;
+                ConnectedGrids = newConnectedGrids;
+
                 //Get all potential grids...
                 ConnectedGrids.Clear();
                 Grid.GetConnectedGrids(GridLinkTypeEnum.Logical, ConnectedGrids);
-
+                
                 //...and filter on the name
                 foreach (var grid in ConnectedGrids)
                 {
@@ -108,12 +120,25 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                         ValidGrids.Add(grid);
                     }
                 }
+
+                //now check if connected grids set has changed
+                if(!CompareGridsSet.SetEquals(ConnectedGrids))
+                {
+                    //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"Connected grids changed");
+                    groupsDirty = true;
+
+                    //update compare grids set to have new set of connected grids, for future comparisons
+                    CompareGridsSet.Clear();
+                    CompareGridsSet.UnionWith(ConnectedGrids);
+                }
             }
 
             if (ValidGrids.Count > 0)
             {
-                if (!string.IsNullOrEmpty(GroupNameFilter))//if we have a group name filter
+                if (hasGroupFilter)//if we have a group name filter
                 {
+                    UpdateGroups();
+
                     foreach (var group in BlockGroups)//for each valid group
                     {
                         //check all blocks in the group and if they meet the name and item type filter, are in a valid grid AND are not already added to the list
@@ -172,28 +197,33 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         //private methods
         private void UpdateGroups()
         {
+            if(!groupsDirty)
+            {
+                return;
+            }
+            //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"UpdateGroups");
+            
             BlockGroups.Clear();
 
             if (TerminalSystem != null && !string.IsNullOrEmpty(GroupNameFilter))
             {
                 TerminalSystem.GetBlockGroups(BlockGroups, (group) => {
-                    //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"Group: {group.Name}, is valid = {GroupNameFilterMatcher.Test(group.Name)}");
                     return GroupNameFilterMatcher.Test(group.Name);
                 });
             }
+
+            groupsDirty = false;
         }
 
         //Event handlers
         private void OnGroupRemoved(IMyBlockGroup obj)
         {
-            MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"Group removed: {obj.Name}");
-            UpdateGroups();
+            groupsDirty = true;
         }
 
         private void OnGroupAdded(IMyBlockGroup obj)
         {
-            MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"Group added: {obj.Name}");
-            UpdateGroups();
+            groupsDirty = true;
         }
     }
 }
