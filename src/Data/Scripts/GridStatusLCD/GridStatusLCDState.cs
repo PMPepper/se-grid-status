@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    class GridStatusLCDState
+    public class GridStatusLCDState
     {
-        public List<AStatusEntry> Entries = new List<AStatusEntry>();
+        public List<AStatusEntry> Entries { get; set; } = new List<AStatusEntry>();
     }
 }

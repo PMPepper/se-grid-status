@@ -6,16 +6,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using VRageMath;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    class OxygenStatusEntry : ABlockFilterStatusEntry
+    public class OxygenStatusEntry : ABlockFilterStatusEntry
     {
-        private string _Heading = "Gas";
+        private string _Heading = "Oxygen";
+        [XmlAttribute]
         public string Heading { get { return _Heading; } set { if (Label != null) { Label.Text = value; } _Heading = value; } }
+        [XmlAttribute]
         public bool ShowOnHUD = true;
 
         private View View;

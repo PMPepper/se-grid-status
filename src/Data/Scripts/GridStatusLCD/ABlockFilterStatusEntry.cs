@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using VRage.Game.ModAPI;
 using VRageMath;
 using IngameIMyBlockGroup = Sandbox.ModAPI.Ingame.IMyBlockGroup;
@@ -13,9 +14,10 @@ using IngameMyInventoryItem = VRage.Game.ModAPI.Ingame.MyInventoryItem;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    abstract class ABlockFilterStatusEntry : AStatusEntry
+    abstract public class ABlockFilterStatusEntry : AStatusEntry
     {
         private IMyCubeBlock _Block;
+        [XmlIgnore]
         public IMyCubeBlock Block { get { return _Block; } protected set {
 
                 _Block = value;
@@ -31,13 +33,17 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private StringMatcher GroupNameFilterMatcher = new StringMatcher("");
         private StringMatcher GridNameFilterMatcher = new StringMatcher("");
 
+        [XmlAttribute]
         public string BlockNameFilter { get { return BlockNameFilterMatcher.Value; } set { BlockNameFilterMatcher.Value = value; } }
+        [XmlAttribute]
         public string GroupNameFilter { get { return GroupNameFilterMatcher.Value; } set { if (GroupNameFilterMatcher.Value != value) { GroupNameFilterMatcher.Value = value; groupsDirty = true; } } }
-        //a value of "" = self
-        public string GridNameFilter { get { return GridNameFilterMatcher.Value; } set { GridNameFilterMatcher.Value = value; } }
+        
+        [XmlAttribute]
+        public string GridNameFilter { get { return GridNameFilterMatcher.Value; } set { GridNameFilterMatcher.Value = value; } }//a value of "" = self
 
         private bool groupsDirty = true;
         //Reuse objects to reduce allocations
+        [XmlIgnore]
         public List<IMyCubeBlock> FilteredBlocks { get; private set; } = new List<IMyCubeBlock>();
         private List<IngameIMyBlockGroup> BlockGroups = new List<IngameIMyBlockGroup>();
         private List<MyCubeGrid> ConnectedGrids = new List<MyCubeGrid>();
@@ -47,6 +53,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private HashSet<MyCubeGrid> CompareGridsSet = new HashSet<MyCubeGrid>();
 
         private IMyGridTerminalSystem _TerminalSystem;
+        [XmlIgnore]
         public IMyGridTerminalSystem TerminalSystem
         {
             get { return _TerminalSystem; }

@@ -5,23 +5,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    class ShieldStatusEntry : AStatusEntry
+    public class ShieldStatusEntry : AStatusEntry
     {
         private string _Heading = "Shields";
+        [XmlAttribute]
         public string Heading { get { return _Heading; } set { if (Label != null) { Label.Text = value; } _Heading = value; } }
+        [XmlAttribute]
         public bool ShowOnHUD = true;
 
         private GridStatusApp App;
         private IMyCubeBlock Block;
         private View View;
 
-        IMyTerminalBlock ShieldGeneratorBlock;
+        private IMyTerminalBlock ShieldGeneratorBlock;
 
         private Label Label;
         private ProgressBar StatusBar;

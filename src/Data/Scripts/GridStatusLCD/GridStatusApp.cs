@@ -13,7 +13,7 @@ using VRageMath;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    class GridStatusApp : TouchApp
+    public class GridStatusApp : TouchApp
     {
         //General
         private IMyCubeBlock Block;

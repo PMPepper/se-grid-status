@@ -5,11 +5,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using VRage.Game.ModAPI;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    abstract class AStatusEntry
+    [XmlInclude(typeof(ShieldStatusEntry))]
+    [XmlInclude(typeof(InventoryStatusEntry))]
+    [XmlInclude(typeof(OxygenStatusEntry))]
+    //TODO [XmlInclude(typeof(HydrogenStatusEntry))]
+    public abstract class AStatusEntry
     {
         abstract public View Init(GridStatusApp app, IMyCubeBlock block, IMyTextSurface surface);
         abstract public void Update(StringBuilder hudMessageText);

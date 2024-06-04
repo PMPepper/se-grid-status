@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using VRage.Game.ModAPI;
 using VRageMath;
 using IngameIMyBlockGroup = Sandbox.ModAPI.Ingame.IMyBlockGroup;
@@ -13,17 +14,24 @@ using IngameMyInventoryItem = VRage.Game.ModAPI.Ingame.MyInventoryItem;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    class InventoryStatusEntry : ABlockFilterStatusEntry
+    public class InventoryStatusEntry : ABlockFilterStatusEntry
     {
-        private string _Heading = "Inventory";
+        
+        [XmlAttribute]
         public string Heading { get { return _Heading; } set { if (Label != null) { Label.Text = value; } _Heading = value; } }
+        [XmlAttribute]
         public bool ShowOnHUD = true;
 
         //"MyObjectBuilder_Ore/Ice";
+        [XmlAttribute]
         public string ItemType = "Ore";
+        [XmlAttribute]
         public string ItemSubtype = "Ice";
+        [XmlAttribute]
         public float InvFull = 1000000;
-
+        
+        //private vars
+        private string _Heading = "Inventory";
         private GridStatusApp App;
         private View View;
 

@@ -56,11 +56,12 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             var state = new GridStatusLCDState();
             state.Entries.Add(new ShieldStatusEntry());
             state.Entries.Add(new InventoryStatusEntry() { Heading = "Ice" });
-            state.Entries.Add(new OxygenStatusEntry() { Heading = "Oxygen", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
+            state.Entries.Add(new OxygenStatusEntry() { Heading = "O2", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
 
-            //string saveText = MyAPIGateway.Utilities.SerializeToXML(state);
+            string saveText = MyAPIGateway.Utilities.SerializeToXML(state);
+            //string saveText = MyAPIGateway.Utilities.SerializeToXML(state.Entries[2]);
 
-            //(block as IMyTerminalBlock).CustomData = saveText;
+            (_block as IMyTerminalBlock).CustomData = saveText;
             //END TEMP
 
             _app = new GridStatusApp(_block, _surface, state);
