@@ -1,4 +1,13 @@
 ﻿<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <EntityComponents>
-  </EntityComponents>
+	<EntityComponents>
+		<EntityComponent xsi:type="MyObjectBuilder_ModStorageComponentDefinition">
+			<Id>
+				<TypeId>ModStorageComponent</TypeId>
+				<SubtypeId>GridStatusLCDState</SubtypeId>
+			</Id>
+			<RegisteredStorageGuids>
+				<guid>de4b3d5d-77fe-48e0-baa3-4c7fe9e1d81d</guid>
+			</RegisteredStorageGuids>
+		</EntityComponent>
+	</EntityComponents>
 </Definitions>

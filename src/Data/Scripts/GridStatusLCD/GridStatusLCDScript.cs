@@ -9,11 +9,12 @@ using VRage.Utils;
 using VRageMath;
 using Lima.API;
 using System.Text;
+using Sandbox.Game.EntityComponents;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
     [MyTextSurfaceScript("GridStatusLCDScript", "Grid status")]
-    class GridStatusLCDScript : MyTSSCommon
+    public class GridStatusLCDScript : MyTSSCommon
     {
         public override ScriptUpdate NeedsUpdate => ScriptUpdate.Update10; // frequency that Run() is called.
         //private int ScrollTime = 0;
@@ -21,6 +22,27 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         //private static readonly float ScrollSpeed = 3;//pixels per update
         //private static readonly int ScrollPauseUpdates = 18;//how many updates to say paused at the start and end when scrolling
 
+        private int _Index = -1;
+        public int Index { get {
+                //first time this runs, we need to find our surface index
+                if(_Index == -1)
+                {
+                    var provider = Block as IMyTextSurfaceProvider;
+
+                    for(int i = 0; i < provider.SurfaceCount; i++)
+                    {
+                        if(provider.GetSurface(i) == Surface)
+                        {
+                            _Index = i;
+                            break;
+                        }
+                    }
+                }
+
+                return _Index;
+        } }
+
+        public GridStatusLCDState State { get; private set; }
         
 
         IMyCubeBlock _block;
@@ -40,6 +62,9 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             surface.ScriptBackgroundColor = Color.Black;
             Surface.ScriptForegroundColor = Color.SteelBlue;
+
+            State = InitState();
+            GridStatusLCDSession.Instance.AddScriptInstance(this);
         }
 
 
@@ -52,26 +77,13 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 return;
             _init = true;
 
-            //TEMP
-            var state = new GridStatusLCDState();
-            state.Entries.Add(new ShieldStatusEntry());
-            state.Entries.Add(new InventoryStatusEntry() { Heading = "Ice" });
-            state.Entries.Add(new OxygenStatusEntry() { Heading = "O2", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
-
-            string saveText = MyAPIGateway.Utilities.SerializeToXML(state);
-            //string saveText = MyAPIGateway.Utilities.SerializeToXML(state.Entries[2]);
-
-            (_block as IMyTerminalBlock).CustomData = saveText;
-            //END TEMP
-
-            _app = new GridStatusApp(_block, _surface, state);
+            _app = new GridStatusApp(_block, _surface, State);
             _app.Theme.Scale = Math.Min(Math.Max(Math.Min(this.Surface.SurfaceSize.X, this.Surface.SurfaceSize.Y) / 512, 0.4f), 2);
             _app.Cursor.Scale = _app.Theme.Scale;
 
             _terminalBlock.OnMarkForClose += BlockMarkedForClose;
-
             
-                
+            
         }
 
         public override void Dispose()
@@ -90,6 +102,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
             
             _terminalBlock.OnMarkForClose -= BlockMarkedForClose;
+            GridStatusLCDSession.Instance.RemoveScriptInstance(this);
         }
 
         void BlockMarkedForClose(IMyEntity ent)
@@ -127,5 +140,46 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                     MyAPIGateway.Utilities.ShowNotification($"[ ERROR: {GetType().FullName}: {e.Message} ]", 5000, MyFontEnum.Red);
             }
         }
+
+        private GridStatusLCDState InitState()
+        {
+            var state = GridStatusLCDSession.Instance.GetPersistedState(this);
+
+            if(state == null)
+            {
+                state = new GridStatusLCDState();
+
+                //TEMP
+                state.Entries.Add(new ShieldStatusEntry());
+                state.Entries.Add(new InventoryStatusEntry() { Heading = "Ice" });
+                state.Entries.Add(new OxygenStatusEntry() { Heading = "O2", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
+                //END TEMP
+
+                GridStatusLCDSession.Instance.BlockRequiresPersisting(Block as IMyCubeBlock);
+            }
+
+            return state;
+        }
+
+        /*private void StorageExample()
+        {
+            //ah, shit - this need to happen on the server...
+            var Entity = Block as IMyEntity;
+
+
+            if (Entity.Storage == null)
+            {
+                Entity.Storage = new MyModStorageComponent();
+            }
+
+            if (Entity.Storage.ContainsKey(Constants.GridStatusLCDStateGUID))
+            {
+                MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"Storage: {Entity.Storage[Constants.GridStatusLCDStateGUID]}");
+            }
+
+            Entity.Storage[Constants.GridStatusLCDStateGUID] = "blah";
+
+            MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"Write to Storage: {Entity.Storage[Constants.GridStatusLCDStateGUID]}");
+        }*/
     }
 }

@@ -30,7 +30,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         ScrollView MainView { get; }
         Label MainViewHeader { get; }
 
-        GridStatusLCDState State;
+        public GridStatusLCDState State;
 
         //List<AStatusEntry> Entries = new List<AStatusEntry>();
 
