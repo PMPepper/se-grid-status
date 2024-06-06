@@ -17,6 +17,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
     abstract public class ABlockFilterStatusEntry : AStatusEntry
     {
         private IMyCubeBlock _Block;
+
         [XmlIgnore]
         public IMyCubeBlock Block { get { return _Block; } protected set {
 
@@ -27,6 +28,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                     TerminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(Grid);
                 }
         } }
+
+        [XmlIgnore]
         public MyCubeGrid Grid { get { return Block?.CubeGrid as MyCubeGrid; } }
 
         private StringMatcher BlockNameFilterMatcher = new StringMatcher("");
@@ -53,6 +56,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private HashSet<MyCubeGrid> CompareGridsSet = new HashSet<MyCubeGrid>();
 
         private IMyGridTerminalSystem _TerminalSystem;
+        
         [XmlIgnore]
         public IMyGridTerminalSystem TerminalSystem
         {

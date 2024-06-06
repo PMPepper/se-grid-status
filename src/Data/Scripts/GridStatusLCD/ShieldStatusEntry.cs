@@ -14,15 +14,25 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
     public class ShieldStatusEntry : AStatusEntry
     {
-        private string _Heading = "Shields";
+        [XmlIgnore]
+        public override string Type
+        {
+            get
+            {
+                return "Energy shield strength";
+            }
+        }
+
+        private string _Name = "Shields";
+
         [XmlAttribute]
-        public string Heading { get { return _Heading; } set { if (Label != null) { Label.Text = value; } _Heading = value; } }
+        override public string Name { get { return _Name; } set { if (Label != null) { Label.Text = value; } _Name = value; } }
+        
         [XmlAttribute]
         public bool ShowOnHUD = true;
 
         private GridStatusApp App;
         private IMyCubeBlock Block;
-        private View View;
 
         private IMyTerminalBlock ShieldGeneratorBlock;
 
@@ -51,7 +61,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             View.Flex = new Vector2(1, 0);
             View.Padding = new Vector4(8);
 
-            Label = new Label(Heading);
+            Label = new Label(Name);
             Label.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
             Label.Margin = Vector4.Zero;
             Label.Flex = new Vector2(1, 0);
@@ -99,7 +109,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             //HUD text
             if(ShowOnHUD)
             {
-                hudMessageText.AppendLine($"{Heading}: {shieldStatusStr}");
+                hudMessageText.AppendLine($"{Name}: {shieldStatusStr}");
 
                 if (shieldStatus.Current >= 0)
                 {

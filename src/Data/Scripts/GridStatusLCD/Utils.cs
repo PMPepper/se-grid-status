@@ -38,9 +38,15 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
         }
 
-        public static void LogException(Exception e)
+        public static void LogException(Exception e, int depth = 0)
         {
-            Log($"Exception message = {e.Message}, Stack trace:\n{e.StackTrace}", 3);
+            Log($"Exception({depth}) message = {e.Message}, Stack trace:\n{e.StackTrace}", 3);
+
+            if(e.InnerException != null)
+            {
+                LogException(e.InnerException, ++depth);
+                //Log($"InnerException message = {e.InnerException.Message}, Stack trace:\n{e.InnerException.StackTrace}", 3);
+            }
         }
     }
 }

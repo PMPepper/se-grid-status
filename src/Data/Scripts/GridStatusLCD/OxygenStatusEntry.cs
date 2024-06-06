@@ -15,13 +15,19 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
     public class OxygenStatusEntry : ABlockFilterStatusEntry
     {
+        [XmlIgnore]
+        public override string Type
+        {
+            get
+            {
+                return "Oxygen storage";
+            }
+        }
         private string _Heading = "Oxygen";
         [XmlAttribute]
-        public string Heading { get { return _Heading; } set { if (Label != null) { Label.Text = value; } _Heading = value; } }
+        override public string Name { get { return _Heading; } set { if (Label != null) { Label.Text = value; } _Heading = value; } }
         [XmlAttribute]
         public bool ShowOnHUD = true;
-
-        private View View;
 
         private Label Label;
         private ProgressBar StatusBar;
@@ -47,7 +53,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             View.Flex = new Vector2(1, 0);
             View.Padding = new Vector4(8);
 
-            Label = new Label(Heading);
+            Label = new Label(Name);
             Label.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
             Label.Margin = Vector4.Zero;
 
@@ -106,7 +112,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             //HUD text
             if (ShowOnHUD)
             {
-                hudMessageText.AppendLine($"{Heading}: {statusStr}");
+                hudMessageText.AppendLine($"{Name}: {statusStr}");
 
                 TextUtils.TextBar(hudMessageText, (float)(containsGas / totalCapacity), 20);
                 hudMessageText.Append('\n');

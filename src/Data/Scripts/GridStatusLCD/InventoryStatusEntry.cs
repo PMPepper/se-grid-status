@@ -18,7 +18,16 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
     {
         
         [XmlAttribute]
-        public string Heading { get { return _Heading; } set { if (Label != null) { Label.Text = value; } _Heading = value; } }
+        override public string Name { get { return _Name; } set { if (Label != null) { Label.Text = value; } _Name = value; } }
+        [XmlIgnore]
+        public override string Type
+        {
+            get
+            {
+                return "Inventory status";
+            }
+        }
+
         [XmlAttribute]
         public bool ShowOnHUD = true;
 
@@ -31,9 +40,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         public float InvFull = 1000000;
         
         //private vars
-        private string _Heading = "Inventory";
+        private string _Name = "Inventory";
         private GridStatusApp App;
-        private View View;
 
         private Label Label;
         private ProgressBar StatusBar;
@@ -61,7 +69,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             View.Flex = new Vector2(1, 0);
             View.Padding = new Vector4(8);
 
-            Label = new Label(Heading);
+            Label = new Label(Name);
             Label.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
             Label.Margin = Vector4.Zero;
 
@@ -115,7 +123,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             if (ShowOnHUD)
             {
                 //hudMessageText.AppendLine($"{Heading}: TODO Grids = {ValidGrids.Count}, Groups = {BlockGroups.Count}, Blocks = {InventoryBlocks.Count}");
-                hudMessageText.AppendLine($"{Heading}: {statusStr}");
+                hudMessageText.AppendLine($"{Name}: {statusStr}");
 
                 TextUtils.TextBar(hudMessageText, inventoryContains / InvFull, 20);
                 hudMessageText.Append('\n');

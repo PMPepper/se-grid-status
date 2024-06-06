@@ -15,5 +15,13 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         {
             return element.Margin.Y + element.Margin.W + element.Pixels.Y;
         }
+
+        public static void RemoveAllChildren(this ContainerBase container)
+        {
+            while(container.Children.Count > 0)
+            {
+                container.RemoveChild(0);
+            }
+        }
     }
 }

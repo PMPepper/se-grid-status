@@ -155,14 +155,26 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             if(config == null)
             {
-                Utils.Log("GetStatusLCDScript::InitState No valid persisted state found, get default config", 2);
+                Utils.Log("GetStatusLCDScript::InitConfig No valid persisted state found, get default config", 2);
 
                 config = new GridStatusLCDConfig();
 
                 //TEMP
                 config.Entries.Add(new ShieldStatusEntry());
-                config.Entries.Add(new InventoryStatusEntry() { Heading = "Ice" });
-                config.Entries.Add(new OxygenStatusEntry() { Heading = "O2", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
+                config.Entries.Add(new InventoryStatusEntry() { Name = "Ice" });
+                config.Entries.Add(new OxygenStatusEntry() { Name = "O2", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
+                //END TEMP
+
+                //TEMP
+                try
+                {
+                    MyAPIGateway.Utilities.SerializeToXML(new ShieldStatusEntry());
+                }
+                catch(Exception e)
+                {
+                    Utils.Log("GetStatusLCDScript::InitConfig !!!!!!!!!!!!!!!!!!!!!!!", 2);
+                    Utils.LogException(e);
+                }
                 //END TEMP
 
                 GridStatusLCDSession.Instance.BlockRequiresPersisting(Block as IMyCubeBlock);

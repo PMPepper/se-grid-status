@@ -16,6 +16,13 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
     //TODO [XmlInclude(typeof(HydrogenStatusEntry))]
     public abstract class AStatusEntry
     {
+        [XmlIgnore]
+        abstract public string Type { get; }
+        [XmlAttribute]
+        abstract public string Name { get; set; }
+
+        [XmlIgnore]
+        public View View { get; protected set; }
         abstract public View Init(GridStatusApp app, IMyCubeBlock block, IMyTextSurface surface);
         abstract public void Update(StringBuilder hudMessageText);
         abstract public void Dispose();

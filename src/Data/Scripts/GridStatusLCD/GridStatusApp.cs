@@ -40,14 +40,19 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         public View EditModeFooter { get; }
         public Button EditModeApplyBtn { get; }
         public Button EditModeCancelBtn { get; }
+        public IMyTextSurface Surface { get; }
 
-        public GridStatusLCDConfig Config;
+        public GridStatusLCDConfig Config { get; protected set; }
 
         //List<AStatusEntry> Entries = new List<AStatusEntry>();
 
+        public static readonly Color BgCol = new Color() { A = 10, R = 70, G = 130, B = 180 };
+        public static readonly int DefaultSpace = 8;
+        public static readonly Vector4 DefaultSpacing = new Vector4(DefaultSpace);
 
         public GridStatusApp(IMyCubeBlock block, IMyTextSurface surface, GridStatusLCDConfig config) : base(block, surface)
         {
+            Surface = surface;
             Config = config;
             HUDTextAPI = GridStatusLCDSession.HUDTextAPI; //store local reference
             Block = block;
@@ -55,25 +60,21 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             DefaultBg = true;
 
-            var bgCol = new Color() { A = 10, R = 70, G = 130, B = 180 };
-            var defaultSpace = 8;
-            var defaultSpacing = new Vector4(defaultSpace);
-
             MainContent = new View(ViewDirection.Column);
-            MainContent.BgColor = bgCol;
-            MainContent.Padding = defaultSpacing;
+            MainContent.BgColor = BgCol;
+            MainContent.Padding = DefaultSpacing;
             MainContent.Flex = Vector2.One;
             MainContent.Pixels = Vector2.Zero;
-            MainContent.Gap = defaultSpace;
+            MainContent.Gap = DefaultSpace;
 
             //Header
             Heading = new Label("Loading...", 0.6f);
             
             Header = new View();
-            Header.Padding = defaultSpacing;
-            Header.Pixels = new Vector2(0, Heading.Pixels.Y + (2 * defaultSpace));
+            Header.Padding = DefaultSpacing;
+            Header.Pixels = new Vector2(0, Heading.Pixels.Y + (2 * DefaultSpace));
             Header.Flex = new Vector2(1, 0);
-            Header.BgColor = bgCol;
+            Header.BgColor = BgCol;
 
             Header.AddChild(Heading);
 
@@ -93,25 +94,12 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             EditEntriesView.Gap = 2;
             EditEntriesView.ScrollAlwaysVisible = false;
 
-            //Init entries
-            foreach(var entry in config.Entries)
-            {
-                if(entry != null)
-                {
-                    var view = entry.Init(this, block, surface);
-                    view.BgColor = bgCol;
-                    EntriesView.AddChild(view);
-
-                    //EditEntriesView.AddChild();
-                }
-            }
-
             //Footer
             Footer = new View();
-            Footer.Padding = defaultSpacing;
-            Footer.Pixels = new Vector2(0, 20 + (2 * defaultSpace));
+            Footer.Padding = DefaultSpacing;
+            Footer.Pixels = new Vector2(0, 20 + (2 * DefaultSpace));
             Footer.Flex = new Vector2(1, 0);
-            Footer.BgColor = bgCol;
+            Footer.BgColor = BgCol;
             Footer.Direction = ViewDirection.Row;
             Footer.Alignment = ViewAlignment.End;
 
@@ -121,13 +109,13 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             //edit mode footer
             EditModeFooter = new View();
-            EditModeFooter.Padding = defaultSpacing;
-            EditModeFooter.Pixels = new Vector2(0, 20 + (2 * defaultSpace));
+            EditModeFooter.Padding = DefaultSpacing;
+            EditModeFooter.Pixels = new Vector2(0, 20 + (2 * DefaultSpace));
             EditModeFooter.Flex = new Vector2(1, 0);
-            EditModeFooter.BgColor = bgCol;
+            EditModeFooter.BgColor = BgCol;
             EditModeFooter.Direction = ViewDirection.Row;
             EditModeFooter.Alignment = ViewAlignment.End;
-            EditModeFooter.Gap = defaultSpace;
+            EditModeFooter.Gap = DefaultSpace;
 
             EditModeApplyBtn = new Button("Apply", () => IsEditing = false);//TODO actually apply/cancel(?) the changes?
             EditModeCancelBtn = new Button("Cancel", () => IsEditing = false);
@@ -142,12 +130,32 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             MainContent.AddChild(Footer);
             MainContent.AddChild(EditModeFooter);
 
+            InitFromConfig();
+
             AddChild(MainContent);
         }
 
         public void SetConfig(GridStatusLCDConfig newConfig)
         {
 
+        }
+
+        private void InitFromConfig()
+        {
+            EntriesView.RemoveAllChildren();
+            EditEntriesView.RemoveAllChildren();
+
+            foreach (var entry in Config.Entries)
+            {
+                if (entry != null)
+                {
+                    var view = entry.Init(this, Block, Surface);
+                    view.BgColor = BgCol;
+                    EntriesView.AddChild(view);
+
+                    EditEntriesView.AddChild(new EditEntry(entry));
+                }
+            }
         }
 
         private void OnBlockAdded(IMySlimBlock block)
