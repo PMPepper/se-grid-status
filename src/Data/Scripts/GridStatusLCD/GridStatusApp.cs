@@ -27,56 +27,94 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private const int HUDMessageTTL = 30;
 
         //UI elements
-        ScrollView MainView { get; }
-        Label MainViewHeader { get; }
+        View MainContent { get; }
+        ScrollView EntriesView { get; }
+        View Header { get; }
+        Label Heading { get; }
+        View Footer { get; }
 
-        public GridStatusLCDConfig State;
+        public GridStatusLCDConfig Config;
 
         //List<AStatusEntry> Entries = new List<AStatusEntry>();
 
 
-        public GridStatusApp(IMyCubeBlock block, IMyTextSurface surface, GridStatusLCDConfig state) : base(block, surface)
+        public GridStatusApp(IMyCubeBlock block, IMyTextSurface surface, GridStatusLCDConfig config) : base(block, surface)
         {
-            State = state;
+            Config = config;
             HUDTextAPI = GridStatusLCDSession.HUDTextAPI; //store local reference
             Block = block;
             SetGrid(block.CubeGrid);
 
             DefaultBg = true;
 
-            var window = new View(ViewDirection.Column);
-            window.BgColor = new Color() { A = 10, R = 70, G = 130, B = 180 };
+            var bgCol = new Color() { A = 10, R = 70, G = 130, B = 180 };
+            var defaultSpace = 8;
+            var defaultSpacing = new Vector4(defaultSpace);
 
-            MainView = new ScrollView();
-            MainView.Flex = new Vector2(1f - (16f / surface.TextureSize.X), 1);
-            MainView.Direction = ViewDirection.Column;
+            MainContent = new View(ViewDirection.Column);
+            MainContent.BgColor = bgCol;
+            MainContent.Padding = defaultSpacing;
+            MainContent.Flex = Vector2.One;
+            MainContent.Pixels = Vector2.Zero;
+            MainContent.Gap = defaultSpace;
 
-            MainView.Margin = new Vector4(8);
-            MainView.BgColor = new Color() { A = 10, R = 70, G = 130, B = 180 };//new Color() { A = 30, R = 20, G = 40, B = 80 };
-            MainView.Padding = new Vector4(8);
-            MainView.Gap = 8;
-            MainView.ScrollAlwaysVisible = false;
-
-            MainViewHeader = new Label("Loading...", 0.6f);
-
-            MainView.AddChild(MainViewHeader);
+            EntriesView = new ScrollView();
+            EntriesView.Pixels = Vector2.Zero;
+            EntriesView.Flex = Vector2.One;// new Vector2(1f - (16f / surface.TextureSize.X), 1);//?
+            EntriesView.Direction = ViewDirection.Column;
+            //EntriesView.BgColor = bgCol;
+            //EntriesView.Padding = defaultSpacing;
+            EntriesView.Gap = 2;
+            EntriesView.ScrollAlwaysVisible = false;
             
-            foreach(var entry in state.Entries)
+            Heading = new Label("Loading...", 0.6f);
+            
+            Header = new View();
+            Header.Padding = defaultSpacing;
+            Header.Pixels = new Vector2(0, Heading.Pixels.Y + (2 * defaultSpace));
+            Header.Flex = new Vector2(1, 0);
+            Header.BgColor = bgCol;
+
+            
+            
+
+            Header.AddChild(Heading);
+
+            MainContent.AddChild(Header);
+            
+            foreach(var entry in config.Entries)
             {
                 if(entry != null)
                 {
-                    MainView.AddChild(entry.Init(this, block, surface));
+                    var view = entry.Init(this, block, surface);
+                    view.BgColor = bgCol;
+                    EntriesView.AddChild(view);
                 }
             }
-            
-            window.AddChild(MainView);
-            
-            AddChild(window);
+
+            MainContent.AddChild(EntriesView);
+
+            //Footer
+            Footer = new View();
+            Footer.Padding = defaultSpacing;
+            Footer.Pixels = new Vector2(0, 20 + (2 * defaultSpace));
+            Footer.Flex = new Vector2(1, 0);
+            Footer.BgColor = bgCol;
+
+
+            MainContent.AddChild(Footer);
+
+            AddChild(MainContent);
+        }
+
+        public void SetConfig(GridStatusLCDConfig newConfig)
+        {
+
         }
 
         private void OnBlockAdded(IMySlimBlock block)
         {
-            foreach (var entry in State.Entries)
+            foreach (var entry in Config.Entries)
             {
                 entry?.BlockAdded(block);
             }
@@ -84,7 +122,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         private void OnBlockRemoved(IMySlimBlock block)
         {
-            foreach (var entry in State.Entries)
+            foreach (var entry in Config.Entries)
             {
                 entry?.BlockRemoved(block);
             }
@@ -115,21 +153,37 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 SetGrid(grid);
             }
 
-            //update title
-            MainViewHeader.Text = $"Status for {grid.CustomName}";
-            HUDMessageText.Clear();
-
-            foreach(var entry in State.Entries)
+            if(!CanPlayerView())
             {
-                entry.Update(HUDMessageText);
+                //TODO display 'access denied' message
+                MainContent.Enabled = false;
+
+                if (HUDMessageText != null)
+                {
+                    HUDMessage.Visible = false;
+                }
+            } else
+            {
+                MainContent.Enabled = true;
+
+                //update title
+                Heading.Text = $"Status for {grid.CustomName}";//TODO customisable
+                HUDMessageText.Clear();
+
+                foreach (var entry in Config.Entries)
+                {
+                    entry.Update(HUDMessageText);
+                }
+
+                if (HUDMessageText != null)
+                {
+                    HUDMessage.Visible = GridStatusLCDSession.Instance.IsControlledEntity(grid);
+                }
+
+                Footer.Enabled = CanPlayerEdit();
             }
 
             ForceUpdate();
-
-            if(HUDMessageText != null)
-            {
-                HUDMessage.Visible = GridStatusLCDSession.Instance.IsControlledEntity(grid);
-            }
         }
 
         public void Dispose()
@@ -142,7 +196,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 HUDMessage = null;
             }
 
-            foreach (var entry in State.Entries)
+            foreach (var entry in Config.Entries)
             {
                 entry?.Dispose();
             }
@@ -152,6 +206,16 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             Block = null;
 
             SetGrid(null);
+        }
+
+        public bool CanPlayerView()
+        {
+            return true;//TODO
+        }
+
+        public bool CanPlayerEdit()
+        {
+            return true;
         }
 
         private void SetGrid(IMyCubeGrid newGrid)
@@ -174,7 +238,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 Grid.OnBlockRemoved += OnBlockRemoved;
             }
 
-            foreach (var entry in State.Entries)
+            foreach (var entry in Config.Entries)
             {
                 entry?.GridChanged(newGrid);
             }

@@ -49,23 +49,27 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             View = new View();
             View.Flex = new Vector2(1, 0);
-            View.Pixels = new Vector2(0, 36);
+            View.Padding = new Vector4(8);
 
             Label = new Label(Heading);
             Label.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
-            Label.Margin = Vector4.UnitY * 8;
-
+            Label.Margin = Vector4.Zero;
+            Label.Flex = new Vector2(1, 0);
+            
             StatusBar = new ProgressBar(0, 1, false, 1);
             StatusBar.Value = 0;
             StatusBar.Label.Text = "";
             StatusBar.Label.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.RIGHT;
 
+            StatusBar.Margin = Vector4.Zero;
             StatusBar.Pixels = new Vector2(0, StatusBar.Pixels.Y);
             StatusBar.Flex = new Vector2(1, 0);
-
+            
             View.AddChild(Label);
             View.AddChild(StatusBar);
-            //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"ShieldStatusEntry::Init surface size = {surface.SurfaceSize.X}, texture size = {surface.TextureSize.X}");
+
+            View.Pixels = new Vector2(0, Label.OuterHeight() + StatusBar.OuterHeight() + View.Padding.Y + View.Padding.W);
+
             return View;
         }
 

@@ -245,7 +245,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             {
                 if(entry.Key >= 0 && entry.Key < stateToPersist.Length)
                 {
-                    stateToPersist[entry.Key] = entry.Value.State;
+                    stateToPersist[entry.Key] = entry.Value.Config;
                 } else
                 {
                     Utils.Log($"GridStatusLCDSession::PersistBlock unable to persist script with index {entry.Key} for block \"{block}\" (SurfaceCount = {stateToPersist.Length})", 2);
@@ -327,7 +327,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                     {
                         Utils.Log("GridStatusLCDSession::GetPersistedState failed to deserialise persisted state", 2);
                         Utils.LogException(e);
-                        Utils.Log($"Persisted data: {iniData}");
+                        Utils.Log($"Persisted data: {iniData}", 1);
                     }
                     
                 }

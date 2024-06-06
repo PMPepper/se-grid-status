@@ -10,6 +10,7 @@ using VRageMath;
 using Lima.API;
 using System.Text;
 using Sandbox.Game.EntityComponents;
+using Sandbox.Game.Entities;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
@@ -42,7 +43,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 return _Index;
         } }
 
-        public GridStatusLCDConfig State { get; private set; }
+        public GridStatusLCDConfig Config { get; private set; }
         
 
         IMyCubeBlock _block;
@@ -62,9 +63,6 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             surface.ScriptBackgroundColor = Color.Black;
             Surface.ScriptForegroundColor = Color.SteelBlue;
-
-            State = InitState();
-            GridStatusLCDSession.Instance.AddScriptInstance(this);
         }
 
 
@@ -77,13 +75,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 return;
             _init = true;
 
-            _app = new GridStatusApp(_block, _surface, State);
+            GridStatusLCDSession.Instance.AddScriptInstance(this);
+            Config = InitConfig();
+
+            _app = new GridStatusApp(_block, _surface, Config);
             _app.Theme.Scale = Math.Min(Math.Max(Math.Min(this.Surface.SurfaceSize.X, this.Surface.SurfaceSize.Y) / 512, 0.4f), 2);
             _app.Cursor.Scale = _app.Theme.Scale;
 
             _terminalBlock.OnMarkForClose += BlockMarkedForClose;
-            
-            
         }
 
         public override void Dispose()
@@ -107,7 +106,11 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         void BlockMarkedForClose(IMyEntity ent)
         {
-            //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"GridStatusLCDScript::BlockMarkedForClose");
+            if ((Block.CubeGrid as MyCubeGrid).Physics == null)
+            {
+                return;//ignore non-physical grids
+            }
+            
             Dispose();
         }
 
@@ -117,6 +120,11 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             {
                 if (!_init && ticks++ < (6 * 2)) // 2 secs
                     return;
+
+                if((Block.CubeGrid as MyCubeGrid).Physics == null)
+                {
+                    return;//ignore non-physical grids
+                }
 
                 Init();
 
@@ -141,24 +149,26 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
         }
 
-        private GridStatusLCDConfig InitState()
+        private GridStatusLCDConfig InitConfig()
         {
-            var state = GridStatusLCDSession.Instance.GetPersistedState(this);
+            var config = GridStatusLCDSession.Instance.GetPersistedState(this);
 
-            if(state == null)
+            if(config == null)
             {
-                state = new GridStatusLCDConfig();
+                Utils.Log("GetStatusLCDScript::InitState No valid persisted state found, get default config", 2);
+
+                config = new GridStatusLCDConfig();
 
                 //TEMP
-                state.Entries.Add(new ShieldStatusEntry());
-                state.Entries.Add(new InventoryStatusEntry() { Heading = "Ice" });
-                state.Entries.Add(new OxygenStatusEntry() { Heading = "O2", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
+                config.Entries.Add(new ShieldStatusEntry());
+                config.Entries.Add(new InventoryStatusEntry() { Heading = "Ice" });
+                config.Entries.Add(new OxygenStatusEntry() { Heading = "O2", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
                 //END TEMP
 
                 GridStatusLCDSession.Instance.BlockRequiresPersisting(Block as IMyCubeBlock);
             }
 
-            return state;
+            return config;
         }
 
         /*private void StorageExample()
