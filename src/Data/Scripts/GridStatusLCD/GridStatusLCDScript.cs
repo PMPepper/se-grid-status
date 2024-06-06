@@ -42,7 +42,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 return _Index;
         } }
 
-        public GridStatusLCDState State { get; private set; }
+        public GridStatusLCDConfig State { get; private set; }
         
 
         IMyCubeBlock _block;
@@ -141,13 +141,13 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
         }
 
-        private GridStatusLCDState InitState()
+        private GridStatusLCDConfig InitState()
         {
             var state = GridStatusLCDSession.Instance.GetPersistedState(this);
 
             if(state == null)
             {
-                state = new GridStatusLCDState();
+                state = new GridStatusLCDConfig();
 
                 //TEMP
                 state.Entries.Add(new ShieldStatusEntry());

@@ -239,7 +239,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
 
             var scriptsToPersist = BlockScripts[block];
-            var stateToPersist = new GridStatusLCDState[(block as IMyTextSurfaceProvider)?.SurfaceCount ?? 0];//new Dictionary<int, GridStatusLCDState>();
+            var stateToPersist = new GridStatusLCDConfig[(block as IMyTextSurfaceProvider)?.SurfaceCount ?? 0];//new Dictionary<int, GridStatusLCDState>();
 
             foreach (var entry in scriptsToPersist)
             {
@@ -280,7 +280,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             block.CustomData = ini.ToString();
         }
 
-        public GridStatusLCDState GetPersistedState(GridStatusLCDScript script)
+        public GridStatusLCDConfig GetPersistedState(GridStatusLCDScript script)
         {
             if (script == null)
             {
@@ -320,7 +320,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 {
                     try
                     {
-                        var persistedData = MyAPIGateway.Utilities.SerializeFromXML<GridStatusLCDState[]>(iniData);
+                        var persistedData = MyAPIGateway.Utilities.SerializeFromXML<GridStatusLCDConfig[]>(iniData);
 
                         return persistedData[script.Index];
                     } catch(Exception e)

@@ -30,12 +30,12 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         ScrollView MainView { get; }
         Label MainViewHeader { get; }
 
-        public GridStatusLCDState State;
+        public GridStatusLCDConfig State;
 
         //List<AStatusEntry> Entries = new List<AStatusEntry>();
 
 
-        public GridStatusApp(IMyCubeBlock block, IMyTextSurface surface, GridStatusLCDState state) : base(block, surface)
+        public GridStatusApp(IMyCubeBlock block, IMyTextSurface surface, GridStatusLCDConfig state) : base(block, surface)
         {
             State = state;
             HUDTextAPI = GridStatusLCDSession.HUDTextAPI; //store local reference
