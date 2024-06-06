@@ -26,12 +26,20 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private Vector2 HUDMessagePosition = new Vector2(0.5f, 1);//0 = center, 1/-1 = edges
         private const int HUDMessageTTL = 30;
 
+        //state
+        private bool IsEditing = false;
+
         //UI elements
         View MainContent { get; }
         ScrollView EntriesView { get; }
+        ScrollView EditEntriesView { get; }
         View Header { get; }
         Label Heading { get; }
         View Footer { get; }
+        Button EditModeBtn { get; }
+        public View EditModeFooter { get; }
+        public Button EditModeApplyBtn { get; }
+        public Button EditModeCancelBtn { get; }
 
         public GridStatusLCDConfig Config;
 
@@ -58,15 +66,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             MainContent.Pixels = Vector2.Zero;
             MainContent.Gap = defaultSpace;
 
-            EntriesView = new ScrollView();
-            EntriesView.Pixels = Vector2.Zero;
-            EntriesView.Flex = Vector2.One;// new Vector2(1f - (16f / surface.TextureSize.X), 1);//?
-            EntriesView.Direction = ViewDirection.Column;
-            //EntriesView.BgColor = bgCol;
-            //EntriesView.Padding = defaultSpacing;
-            EntriesView.Gap = 2;
-            EntriesView.ScrollAlwaysVisible = false;
-            
+            //Header
             Heading = new Label("Loading...", 0.6f);
             
             Header = new View();
@@ -75,13 +75,25 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             Header.Flex = new Vector2(1, 0);
             Header.BgColor = bgCol;
 
-            
-            
-
             Header.AddChild(Heading);
 
-            MainContent.AddChild(Header);
-            
+            //Entries view
+            EntriesView = new ScrollView();
+            EntriesView.Pixels = Vector2.Zero;
+            EntriesView.Flex = Vector2.One;
+            EntriesView.Direction = ViewDirection.Column;
+            EntriesView.Gap = 2;
+            EntriesView.ScrollAlwaysVisible = false;
+
+            //Edit entries view
+            EditEntriesView = new ScrollView();
+            EditEntriesView.Pixels = Vector2.Zero;
+            EditEntriesView.Flex = Vector2.One;
+            EditEntriesView.Direction = ViewDirection.Column;
+            EditEntriesView.Gap = 2;
+            EditEntriesView.ScrollAlwaysVisible = false;
+
+            //Init entries
             foreach(var entry in config.Entries)
             {
                 if(entry != null)
@@ -89,10 +101,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                     var view = entry.Init(this, block, surface);
                     view.BgColor = bgCol;
                     EntriesView.AddChild(view);
+
+                    //EditEntriesView.AddChild();
                 }
             }
-
-            MainContent.AddChild(EntriesView);
 
             //Footer
             Footer = new View();
@@ -100,9 +112,35 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             Footer.Pixels = new Vector2(0, 20 + (2 * defaultSpace));
             Footer.Flex = new Vector2(1, 0);
             Footer.BgColor = bgCol;
+            Footer.Direction = ViewDirection.Row;
+            Footer.Alignment = ViewAlignment.End;
 
+            EditModeBtn = new Button("Edit", () => IsEditing = true);
 
+            Footer.AddChild(EditModeBtn);
+
+            //edit mode footer
+            EditModeFooter = new View();
+            EditModeFooter.Padding = defaultSpacing;
+            EditModeFooter.Pixels = new Vector2(0, 20 + (2 * defaultSpace));
+            EditModeFooter.Flex = new Vector2(1, 0);
+            EditModeFooter.BgColor = bgCol;
+            EditModeFooter.Direction = ViewDirection.Row;
+            EditModeFooter.Alignment = ViewAlignment.End;
+            EditModeFooter.Gap = defaultSpace;
+
+            EditModeApplyBtn = new Button("Apply", () => IsEditing = false);//TODO actually apply/cancel(?) the changes?
+            EditModeCancelBtn = new Button("Cancel", () => IsEditing = false);
+
+            EditModeFooter.AddChild(EditModeApplyBtn);
+            EditModeFooter.AddChild(EditModeCancelBtn);
+
+            //add children to view
+            MainContent.AddChild(Header);
+            MainContent.AddChild(EntriesView);
+            MainContent.AddChild(EditEntriesView);
             MainContent.AddChild(Footer);
+            MainContent.AddChild(EditModeFooter);
 
             AddChild(MainContent);
         }
@@ -175,12 +213,16 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                     entry.Update(HUDMessageText);
                 }
 
+                EntriesView.Enabled = !IsEditing;
+                EditEntriesView.Enabled = IsEditing;
+
+                Footer.Enabled = !IsEditing && CanPlayerEdit();
+                EditModeFooter.Enabled = IsEditing && CanPlayerEdit();
+
                 if (HUDMessageText != null)
                 {
                     HUDMessage.Visible = GridStatusLCDSession.Instance.IsControlledEntity(grid);
                 }
-
-                Footer.Enabled = CanPlayerEdit();
             }
 
             ForceUpdate();
