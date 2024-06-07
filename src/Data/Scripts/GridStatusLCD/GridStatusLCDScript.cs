@@ -165,18 +165,6 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 config.Entries.Add(new OxygenStatusEntry() { Name = "O2", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
                 //END TEMP
 
-                //TEMP
-                try
-                {
-                    MyAPIGateway.Utilities.SerializeToXML(new ShieldStatusEntry());
-                }
-                catch(Exception e)
-                {
-                    Utils.Log("GetStatusLCDScript::InitConfig !!!!!!!!!!!!!!!!!!!!!!!", 2);
-                    Utils.LogException(e);
-                }
-                //END TEMP
-
                 GridStatusLCDSession.Instance.BlockRequiresPersisting(Block as IMyCubeBlock);
             }
 

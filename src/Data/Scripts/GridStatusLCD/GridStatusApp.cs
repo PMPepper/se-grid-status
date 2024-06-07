@@ -28,6 +28,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         //state
         private bool IsEditing = false;
+        private bool doResetConfigUI = false;
 
         //UI elements
         View MainContent { get; }
@@ -53,7 +54,6 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         public GridStatusApp(IMyCubeBlock block, IMyTextSurface surface, GridStatusLCDConfig config) : base(block, surface)
         {
             Surface = surface;
-            Config = config;
             HUDTextAPI = GridStatusLCDSession.HUDTextAPI; //store local reference
             Block = block;
             SetGrid(block.CubeGrid);
@@ -130,47 +130,96 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             MainContent.AddChild(Footer);
             MainContent.AddChild(EditModeFooter);
 
-            InitFromConfig();
+            SetConfig(config);
 
             AddChild(MainContent);
         }
 
         public void SetConfig(GridStatusLCDConfig newConfig)
         {
+            if(Config != null)
+            {
+                Config.Dispose();
+            }
 
+            Config = newConfig;
+
+            if(Config != null)
+            {
+                Config.Entries.RemoveAll(entry => entry == null);
+
+                foreach (var entry in Config.Entries)
+                {
+                    entry.Init(this, Block, Surface);
+                }
+            }
+            
+            SetUIFromConfig();
         }
 
-        private void InitFromConfig()
+        private void SetUIFromConfig()
         {
+            doResetConfigUI = false;
+            
             EntriesView.RemoveAllChildren();
             EditEntriesView.RemoveAllChildren();
 
-            foreach (var entry in Config.Entries)
+            if (Config != null)
             {
-                if (entry != null)
+                for (int i = 0; i < Config.Entries.Count; i++)
                 {
-                    var view = entry.Init(this, Block, Surface);
-                    view.BgColor = BgCol;
-                    EntriesView.AddChild(view);
-
-                    EditEntriesView.AddChild(new EditEntry(entry));
+                    var entry = Config.Entries[i];
+                    var index = i;
+                    EntriesView.AddChild(entry.View);
+                    EditEntriesView.AddChild(new EditEntry(
+                        entry,
+                        ((index == 0)
+                            ? null as Action
+                            : () => {
+                                Config.Entries.Move(index, index - 1);
+                                ConfigUIRequiredReset();
+                            }
+                        ),
+                        ((index == Config.Entries.Count - 1)
+                            ? null as Action
+                            : () => {
+                                Config.Entries.Move(index, index + 2);
+                                ConfigUIRequiredReset();
+                            }
+                        ),
+                        () => {
+                            Config.Entries.RemoveAt(index);
+                            ConfigUIRequiredReset();
+                        }
+                    ));
                 }
             }
         }
 
+        private void ConfigUIRequiredReset()
+        {
+            doResetConfigUI = true;
+        }
+
         private void OnBlockAdded(IMySlimBlock block)
         {
-            foreach (var entry in Config.Entries)
+            if( Config != null)
             {
-                entry?.BlockAdded(block);
+                foreach (var entry in Config.Entries)
+                {
+                    entry?.BlockAdded(block);
+                }
             }
         }
 
         private void OnBlockRemoved(IMySlimBlock block)
         {
-            foreach (var entry in Config.Entries)
+            if(Config != null)
             {
-                entry?.BlockRemoved(block);
+                foreach (var entry in Config.Entries)
+                {
+                    entry?.BlockRemoved(block);
+                }
             }
         }
 
@@ -216,11 +265,20 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 Heading.Text = $"Status for {grid.CustomName}";//TODO customisable
                 HUDMessageText.Clear();
 
-                foreach (var entry in Config.Entries)
-                {
-                    entry.Update(HUDMessageText);
-                }
 
+                if(Config != null)
+                {
+                    if(doResetConfigUI)
+                    {
+                        SetUIFromConfig();
+                    }
+
+                    foreach (var entry in Config.Entries)
+                    {
+                        entry.Update(HUDMessageText);
+                    }
+                }
+                
                 EntriesView.Enabled = !IsEditing;
                 EditEntriesView.Enabled = IsEditing;
 
@@ -246,10 +304,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 HUDMessage = null;
             }
 
-            foreach (var entry in Config.Entries)
-            {
-                entry?.Dispose();
-            }
+            Config?.Dispose();
 
             this?.ForceDispose();
 
@@ -288,9 +343,12 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 Grid.OnBlockRemoved += OnBlockRemoved;
             }
 
-            foreach (var entry in Config.Entries)
+            if(Config != null)
             {
-                entry?.GridChanged(newGrid);
+                foreach (var entry in Config.Entries)
+                {
+                    entry?.GridChanged(newGrid);
+                }
             }
         }
     }

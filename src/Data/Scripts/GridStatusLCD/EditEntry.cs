@@ -12,11 +12,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
     {
         public AStatusEntry Entry { get; }
 
-        public EditEntry(AStatusEntry entry) : base(ViewDirection.Row)
+        public EditEntry(AStatusEntry entry, Action onMoveUp, Action onMoveDown, Action onRemove) : base(ViewDirection.Row)
         {
             Entry = entry;
 
-            //TODO actually do stuff here
             Direction = ViewDirection.Column;
             BgColor = GridStatusApp.BgCol;
             Padding = GridStatusApp.DefaultSpacing;
@@ -44,12 +43,18 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             var editBtn = new Button("Edit", () => { });//TODO, do something when clicked
             StyleBtn(editBtn);
-            var upBtn = new Button("Up", () => { });//TODO, do something when clicked
+            
+            var upBtn = new Button("Up", onMoveUp);
             StyleBtn(upBtn);
-            var downBtn = new Button("Down", () => { });//TODO, do something when clicked
+            upBtn.Disabled = onMoveUp == null;
+
+            var downBtn = new Button("Down", onMoveDown);
             StyleBtn(downBtn);
-            var deleteBtn = new Button("X", () => { });//TODO, do something when clicked
+            downBtn.Disabled = onMoveDown == null;
+
+            var deleteBtn = new Button("X", onRemove);
             StyleBtn(deleteBtn);
+            deleteBtn.Disabled = onRemove == null;
 
             AddChild(label);
             AddChild(controlsContainer);

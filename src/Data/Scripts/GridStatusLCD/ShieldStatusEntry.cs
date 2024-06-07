@@ -60,6 +60,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             View = new View();
             View.Flex = new Vector2(1, 0);
             View.Padding = new Vector4(8);
+            View.BgColor = GridStatusApp.BgCol;
 
             Label = new Label(Name);
             Label.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;

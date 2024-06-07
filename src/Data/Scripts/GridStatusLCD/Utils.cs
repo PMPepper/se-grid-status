@@ -45,7 +45,6 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             if(e.InnerException != null)
             {
                 LogException(e.InnerException, ++depth);
-                //Log($"InnerException message = {e.InnerException.Message}, Stack trace:\n{e.InnerException.StackTrace}", 3);
             }
         }
     }
