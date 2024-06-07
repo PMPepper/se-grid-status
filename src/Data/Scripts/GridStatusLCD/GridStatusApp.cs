@@ -1,4 +1,5 @@
 ﻿using Draygo.API;
+using Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls;
 using Lima.API;
 using Sandbox.ModAPI;
 using System;
@@ -27,16 +28,18 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private const int HUDMessageTTL = 30;
 
         //state
-        private bool IsEditing = false;
+        private bool IsEditing = true;
         private bool doResetConfigUI = false;
 
         //UI elements
         View MainContent { get; }
         ScrollView EntriesView { get; }
         ScrollView EditView { get; }
+        SliderControl HUDScaleSlider { get; }
+        SliderControl HUDPositionHorizontalSlider { get; }
+        SliderControl HUDPositionVerticalSlider { get; }
         ScrollView EditEntriesView { get; }
-        View Header { get; }
-        Label Heading { get; }
+        Heading Header { get; }
         View Footer { get; }
         Button EditModeBtn { get; }
         public View EditModeFooter { get; }
@@ -69,15 +72,9 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             MainContent.Gap = DefaultSpace;
 
             //Header
-            Heading = new Label("Loading...", 0.6f);
+            //Heading = new Label("Loading...", 0.6f);
             
-            Header = new View();
-            Header.Padding = DefaultSpacing;
-            Header.Pixels = new Vector2(0, Heading.Pixels.Y + (2 * DefaultSpace));
-            Header.Flex = new Vector2(1, 0);
-            Header.BgColor = BgCol;
-
-            Header.AddChild(Heading);
+            Header = new Heading("Loading...");
 
             //Entries view
             EntriesView = new ScrollView();
@@ -103,6 +100,31 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             EditEntriesView.Gap = 2;
             EditEntriesView.ScrollAlwaysVisible = false;
 
+            //Edit global options
+            var editGlobalOptionsView = new View();
+            editGlobalOptionsView.Pixels = new Vector2(200, 0);
+            editGlobalOptionsView.Flex = new Vector2(0, 1);
+            //editGlobalOptionsView.Padding = DefaultSpacing;
+            editGlobalOptionsView.BgColor = BgCol;
+            editGlobalOptionsView.Gap = DefaultSpace;
+
+            editGlobalOptionsView.AddChild(new Heading("Global options"));
+            editGlobalOptionsView.AddChild(new CheckboxControl("Show on HUD", (newValue) => { }));
+            editGlobalOptionsView.AddChild(HUDScaleSlider = new SliderControl("HUD scale", 0.01f, 5, (newValue) => {
+                Config.HUDMessageScale = newValue;
+                if(HUDMessage != null) HUDMessage.Scale = newValue;
+            }));
+            editGlobalOptionsView.AddChild(HUDPositionHorizontalSlider = new SliderControl("HUD horizontal position", -1, 1, (newValue) => {
+                Config.HUDMessagePosition.X = newValue;
+                if (HUDMessage != null) HUDMessage.Origin = Config.HUDMessagePosition;
+            }));
+            editGlobalOptionsView.AddChild(HUDPositionVerticalSlider = new SliderControl("HUD vertical position", -1, 1, (newValue) => {
+                Config.HUDMessagePosition.Y = newValue;
+                if (HUDMessage != null) HUDMessage.Origin = Config.HUDMessagePosition;
+            }));
+
+            //editGlobalOptionsView.AddChild(new CheckboxControl("Do another thing", (newValue) => { }));
+
             //Footer
             Footer = new View();
             Footer.Padding = DefaultSpacing;
@@ -126,7 +148,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             EditModeFooter.Alignment = ViewAlignment.End;
             EditModeFooter.Gap = DefaultSpace;
 
-            EditModeApplyBtn = new Button("Apply", () => {
+            EditModeApplyBtn = new Button("Save", () => {
                 IsEditing = false;
                 GridStatusLCDSession.Instance.BlockRequiresPersisting(Block);
             });//TODO actually apply/cancel(?) the changes?
@@ -143,6 +165,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             MainContent.AddChild(EntriesView);
             MainContent.AddChild(EditView);
             EditView.AddChild(EditEntriesView);
+            EditView.AddChild(editGlobalOptionsView);
             MainContent.AddChild(Footer);
             MainContent.AddChild(EditModeFooter);
 
@@ -182,6 +205,18 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             if (Config != null)
             {
+                //set values for global config options
+                HUDScaleSlider.Value = (float)Config.HUDMessageScale;
+                HUDPositionHorizontalSlider.Value = Config.HUDMessagePosition.X;
+                HUDPositionVerticalSlider.Value = Config.HUDMessagePosition.Y;
+
+                if(HUDMessage != null)
+                {
+                    HUDMessage.Scale = Config.HUDMessageScale;
+                    HUDMessage.Origin = Config.HUDMessagePosition;
+                }
+
+                //entries
                 for (int i = 0; i < Config.Entries.Count; i++)
                 {
                     var entry = Config.Entries[i];
@@ -246,7 +281,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 if (HUDMessage == null || HUDMessage.TimeToLive == 0)
                 {
                     //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"HUDTextAPI.Heartbeat = true, create message");
-                    HUDMessage = new HudAPIv2.HUDMessage(HUDMessageText, HUDMessagePosition, Scale: (100 / 100d), TimeToLive: HUDMessageTTL);
+                    HUDMessage = new HudAPIv2.HUDMessage(HUDMessageText, Config.HUDMessagePosition, Scale: Config.HUDMessageScale, TimeToLive: HUDMessageTTL);
 
                     //TODO background?
                     //var ln = Msg.GetTextLength();
@@ -278,7 +313,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 MainContent.Enabled = true;
 
                 //update title
-                Heading.Text = $"Status for {grid.CustomName}";//TODO customisable
+                Header.Text = $"Status for {grid.CustomName}";//TODO customisable
                 HUDMessageText.Clear();
 
                 if(Config != null)
