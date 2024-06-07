@@ -62,7 +62,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             _terminalBlock = (IMyTerminalBlock)block;
 
             surface.ScriptBackgroundColor = Color.Black;
-            Surface.ScriptForegroundColor = Color.SteelBlue;
+            surface.ScriptForegroundColor = Color.SteelBlue;
         }
 
 
@@ -78,7 +78,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             GridStatusLCDSession.Instance.AddScriptInstance(this);
             Config = InitConfig();
 
-            _app = new GridStatusApp(_block, _surface, Config);
+            _app = new GridStatusApp(_block, this, Config);
             _app.Theme.Scale = Math.Min(Math.Max(Math.Min(this.Surface.SurfaceSize.X, this.Surface.SurfaceSize.Y) / 512, 0.4f), 2);
             _app.Cursor.Scale = _app.Theme.Scale;
 

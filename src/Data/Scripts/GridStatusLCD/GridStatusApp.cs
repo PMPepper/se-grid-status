@@ -33,6 +33,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         //UI elements
         View MainContent { get; }
         ScrollView EntriesView { get; }
+        ScrollView EditView { get; }
         ScrollView EditEntriesView { get; }
         View Header { get; }
         Label Heading { get; }
@@ -41,7 +42,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         public View EditModeFooter { get; }
         public Button EditModeApplyBtn { get; }
         public Button EditModeCancelBtn { get; }
-        public IMyTextSurface Surface { get; }
+        public GridStatusLCDScript Script { get; }
 
         public GridStatusLCDConfig Config { get; protected set; }
 
@@ -51,9 +52,9 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         public static readonly int DefaultSpace = 8;
         public static readonly Vector4 DefaultSpacing = new Vector4(DefaultSpace);
 
-        public GridStatusApp(IMyCubeBlock block, IMyTextSurface surface, GridStatusLCDConfig config) : base(block, surface)
+        public GridStatusApp(IMyCubeBlock block, GridStatusLCDScript script, GridStatusLCDConfig config) : base(block, script.Surface)
         {
-            Surface = surface;
+            Script = script;
             HUDTextAPI = GridStatusLCDSession.HUDTextAPI; //store local reference
             Block = block;
             SetGrid(block.CubeGrid);
@@ -86,6 +87,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             EntriesView.Gap = 2;
             EntriesView.ScrollAlwaysVisible = false;
 
+            //Edit view
+            EditView = new ScrollView();
+            EditView.Pixels = Vector2.Zero;
+            EditView.Flex = Vector2.One;
+            EditView.Direction = ViewDirection.Row;
+            EditView.Gap = DefaultSpace;
+            EditView.ScrollAlwaysVisible = false;
+
             //Edit entries view
             EditEntriesView = new ScrollView();
             EditEntriesView.Pixels = Vector2.Zero;
@@ -117,8 +126,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             EditModeFooter.Alignment = ViewAlignment.End;
             EditModeFooter.Gap = DefaultSpace;
 
-            EditModeApplyBtn = new Button("Apply", () => IsEditing = false);//TODO actually apply/cancel(?) the changes?
-            EditModeCancelBtn = new Button("Cancel", () => IsEditing = false);
+            EditModeApplyBtn = new Button("Apply", () => {
+                IsEditing = false;
+                GridStatusLCDSession.Instance.BlockRequiresPersisting(Block);
+            });//TODO actually apply/cancel(?) the changes?
+            EditModeCancelBtn = new Button("Cancel", () => {
+                IsEditing = false;
+                SetConfig(GridStatusLCDSession.Instance.GetPersistedState(Script));
+            });
 
             EditModeFooter.AddChild(EditModeApplyBtn);
             EditModeFooter.AddChild(EditModeCancelBtn);
@@ -126,7 +141,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             //add children to view
             MainContent.AddChild(Header);
             MainContent.AddChild(EntriesView);
-            MainContent.AddChild(EditEntriesView);
+            MainContent.AddChild(EditView);
+            EditView.AddChild(EditEntriesView);
             MainContent.AddChild(Footer);
             MainContent.AddChild(EditModeFooter);
 
@@ -150,7 +166,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
                 foreach (var entry in Config.Entries)
                 {
-                    entry.Init(this, Block, Surface);
+                    entry.Init(this, Block, Script.Surface as IMyTextSurface);
                 }
             }
             
@@ -265,7 +281,6 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 Heading.Text = $"Status for {grid.CustomName}";//TODO customisable
                 HUDMessageText.Clear();
 
-
                 if(Config != null)
                 {
                     if(doResetConfigUI)
@@ -280,7 +295,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 }
                 
                 EntriesView.Enabled = !IsEditing;
-                EditEntriesView.Enabled = IsEditing;
+                EditView.Enabled = IsEditing;
 
                 Footer.Enabled = !IsEditing && CanPlayerEdit();
                 EditModeFooter.Enabled = IsEditing && CanPlayerEdit();
