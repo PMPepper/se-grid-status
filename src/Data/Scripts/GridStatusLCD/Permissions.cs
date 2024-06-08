@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VRage.Game;
+using VRage.Game.ModAPI;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
@@ -18,14 +19,37 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
     }
     public static class Permissions
     {
-        
-        //new List<string>() { "Everyone", "Block owner + allies", "Block owner + faction member", "Users with terminal access", "Block owner" })
-        /*public const string Everyone = "Everyone";
-        public const string Allies = "Block owner + allies";
-        public const string Faction = "Block owner + faction member";
-        public const string TerminalAccess = "Users with block terminal access";
-        public const string BlockOwner = "Block owner";
-*/
+        public static bool CurrentPlayerHasPermissionForBlock(PermissionLevel level, IMyTerminalBlock block)
+        {
+            return PlayerHasPermissionForBlock(MyAPIGateway.Session.Player, level, block);
+        }
+        public static bool PlayerHasPermissionForBlock(IMyPlayer player, PermissionLevel level, IMyTerminalBlock block) {
+            if(IsPlayerAdmin(player))
+            {
+                return true;
+            }
+
+            var relation = player.GetRelationTo(block.OwnerId);
+
+            switch (level)
+            {
+                case PermissionLevel.Everyone:
+                    return true;
+                case PermissionLevel.BlockOwner:
+                    return relation == MyRelationsBetweenPlayerAndBlock.Owner;
+                case PermissionLevel.TerminalAccess:
+                    return block.OwnerId == 0 || relation == MyRelationsBetweenPlayerAndBlock.Owner || relation == MyRelationsBetweenPlayerAndBlock.FactionShare;
+                case PermissionLevel.Faction:
+                    var blockFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(block.OwnerId);
+                    var playerFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(player.IdentityId);
+
+                    return blockFaction != null && blockFaction == playerFaction;
+                case PermissionLevel.Allies:
+                    return relation == MyRelationsBetweenPlayerAndBlock.Owner || relation == MyRelationsBetweenPlayerAndBlock.FactionShare || relation == MyRelationsBetweenPlayerAndBlock.Friends;
+            }
+
+            return false;
+        }
         public static string Description(this PermissionLevel level)
         {
             switch (level)
@@ -53,21 +77,21 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             permissions.Add(PermissionLevel.Everyone);
 
-            if(IsPlayerAlly(block)) {
+            if(CurrentPlayerHasPermissionForBlock(PermissionLevel.Allies, block)) {
                 permissions.Add(PermissionLevel.Allies);
             }
 
-            if (IsPlayerInFaction(block))
+            if (CurrentPlayerHasPermissionForBlock(PermissionLevel.Faction, block))
             {
                 permissions.Add(PermissionLevel.Faction);
             }
 
-            if (IsPlayerHasTerminalAccess(block))
+            if (CurrentPlayerHasPermissionForBlock(PermissionLevel.TerminalAccess, block))
             {
                 permissions.Add(PermissionLevel.TerminalAccess);
             }
 
-            if (IsPlayerBlockOwner(block))
+            if (CurrentPlayerHasPermissionForBlock(PermissionLevel.BlockOwner, block))
             {
                 permissions.Add(PermissionLevel.BlockOwner);
             }
@@ -75,45 +99,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             return permissions;
         }
 
-        private static bool IsPlayerAdmin()
+        private static bool IsPlayerAdmin(IMyPlayer player)
         {
             if(MyAPIGateway.Multiplayer.MultiplayerActive)
             {
-                return MyAPIGateway.Session.IsUserAdmin(MyAPIGateway.Multiplayer.MyId);
+                return MyAPIGateway.Session.IsUserAdmin(player.SteamUserId);
             }
 
             return false;
-        }
-
-        public static bool IsPlayerBlockOwner(IMyTerminalBlock block)
-        {
-            var relation = MyAPIGateway.Session.Player.GetRelationTo(block.OwnerId);
-
-            return IsPlayerAdmin() || relation == MyRelationsBetweenPlayerAndBlock.Owner;
-        }
-
-        public static bool IsPlayerHasTerminalAccess(IMyTerminalBlock block)
-        {
-            var relation = MyAPIGateway.Session.Player.GetRelationTo(block.OwnerId);
-
-            return IsPlayerAdmin() || block.OwnerId == 0 || relation == MyRelationsBetweenPlayerAndBlock.Owner || relation == MyRelationsBetweenPlayerAndBlock.FactionShare;
-        }
-
-        public static bool IsPlayerInFaction(IMyTerminalBlock block)
-        {
-            var player = MyAPIGateway.Session.Player;
-
-            var blockFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(block.OwnerId);
-            var playerFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(player.IdentityId);
-
-            return IsPlayerAdmin() || (blockFaction != null && blockFaction == playerFaction);
-        }
-
-        public static bool IsPlayerAlly(IMyTerminalBlock block)
-        {
-            var relation = MyAPIGateway.Session.Player.GetRelationTo(block.OwnerId);
-
-            return IsPlayerAdmin() || relation == MyRelationsBetweenPlayerAndBlock.Owner || relation == MyRelationsBetweenPlayerAndBlock.FactionShare || relation == MyRelationsBetweenPlayerAndBlock.Friends;
         }
     }
 }

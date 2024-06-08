@@ -32,6 +32,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private bool doResetConfigUI = false;
 
         //UI elements
+        View PermissionDeniedView { get; }
         View MainContent { get; }
         ScrollView EntriesView { get; }
         ScrollView EditView { get; }
@@ -73,6 +74,13 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             DefaultBg = true;
 
+            PermissionDeniedView = new View();
+            PermissionDeniedView.Flex = Vector2.One;
+            PermissionDeniedView.BgColor = BgCol;
+            PermissionDeniedView.Enabled = false;
+            PermissionDeniedView.Alignment = ViewAlignment.Center;
+            PermissionDeniedView.AddChild(new Label("Permission denied", 2) { Flex = new Vector2(1, 0), Alignment = TextAlignment.CENTER });
+
             MainContent = new View(ViewDirection.Column);
             MainContent.BgColor = BgCol;
             MainContent.Padding = DefaultSpacing;
@@ -81,8 +89,6 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             MainContent.Gap = DefaultSpace;
 
             //Header
-            //Heading = new Label("Loading...", 0.6f);
-            
             Header = new Heading("Loading...");
 
             //Entries view
@@ -192,7 +198,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             SetConfig(config);
 
-            AddChild(MainContent);
+            AddChild(MainContent); 
+            AddChild(PermissionDeniedView);
         }
 
         private void OnBlockOwnershipChanged(IMyTerminalBlock block)
@@ -341,6 +348,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             {
                 //TODO display 'access denied' message
                 MainContent.Enabled = false;
+                PermissionDeniedView.Enabled = true;
 
                 if (HUDMessageText != null)
                 {
@@ -349,6 +357,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             } else
             {
                 MainContent.Enabled = true;
+                PermissionDeniedView.Enabled = false;
 
                 //update title
                 Header.Text = $"Status for {grid.CustomName}";//TODO customisable
@@ -367,8 +376,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                     }
                 }
                 
-                EntriesView.Enabled = !IsEditing;
-                EditView.Enabled = IsEditing;
+                EntriesView.Enabled = !IsEditing || !CanPlayerEdit();
+                EditView.Enabled = IsEditing && CanPlayerEdit();
 
                 Footer.Enabled = !IsEditing && CanPlayerEdit();
                 EditModeFooter.Enabled = IsEditing && CanPlayerEdit();
@@ -418,12 +427,22 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         public bool CanPlayerView()
         {
-            return true;//TODO
+            if(Config == null)
+            {
+                return false;
+            }
+
+            return Permissions.CurrentPlayerHasPermissionForBlock(Config.ViewPermission, Block);
         }
 
         public bool CanPlayerEdit()
         {
-            return true;
+            if (Config == null)
+            {
+                return false;
+            }
+
+            return Permissions.CurrentPlayerHasPermissionForBlock(Config.EditPermission, Block);
         }
 
         private void SetGrid(IMyCubeGrid newGrid)
