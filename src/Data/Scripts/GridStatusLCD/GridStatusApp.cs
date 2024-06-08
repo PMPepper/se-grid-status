@@ -35,6 +35,9 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         View MainContent { get; }
         ScrollView EntriesView { get; }
         ScrollView EditView { get; }
+        CheckboxControl HUDEnabledCheckbox { get; }
+
+        public Column EditHudOptionsColumn { get; private set; }
         SliderControl HUDScaleSlider { get; }
         SliderControl HUDPositionHorizontalSlider { get; }
         SliderControl HUDPositionVerticalSlider { get; }
@@ -48,6 +51,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         public GridStatusLCDScript Script { get; }
 
         public GridStatusLCDConfig Config { get; protected set; }
+        
+
 
         //List<AStatusEntry> Entries = new List<AStatusEntry>();
 
@@ -94,34 +99,43 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             //Edit entries view
             EditEntriesView = new ScrollView();
-            EditEntriesView.Pixels = Vector2.Zero;
-            EditEntriesView.Flex = Vector2.One;
+            EditEntriesView.Pixels = new Vector2(200, 0);
+            EditEntriesView.Flex = new Vector2(3, 1);
             EditEntriesView.Direction = ViewDirection.Column;
             EditEntriesView.Gap = 2;
             EditEntriesView.ScrollAlwaysVisible = false;
 
             //Edit global options
-            var editGlobalOptionsView = new View();
-            editGlobalOptionsView.Pixels = new Vector2(200, 0);
-            editGlobalOptionsView.Flex = new Vector2(0, 1);
-            //editGlobalOptionsView.Padding = DefaultSpacing;
-            editGlobalOptionsView.BgColor = BgCol;
-            editGlobalOptionsView.Gap = DefaultSpace;
+            var editOptionsColumn = new Column();
+            editOptionsColumn.Flex = new Vector2(1, 1);
+            editOptionsColumn.Pixels = new Vector2(200, 0);
+            editOptionsColumn.BgColor = BgCol;
 
-            editGlobalOptionsView.AddChild(new Heading("Global options"));
-            editGlobalOptionsView.AddChild(new CheckboxControl("Show on HUD", (newValue) => { }));
-            editGlobalOptionsView.AddChild(HUDScaleSlider = new SliderControl("HUD scale", 0.01f, 5, (newValue) => {
+            editOptionsColumn.AddChild(new Heading("Global options"));
+            editOptionsColumn.AddChild(HUDEnabledCheckbox = new CheckboxControl("HUD summary enabled?", (newValue) => {
+                EditHudOptionsColumn.Enabled = Config.HUDMessageEnabled = newValue;
+            }));
+
+
+            EditHudOptionsColumn = new Column();
+
+            editOptionsColumn.AddChild(EditHudOptionsColumn);
+
+            EditHudOptionsColumn.AddChild(new Heading("HUD options"));
+            EditHudOptionsColumn.AddChild(HUDScaleSlider = new SliderControl("HUD scale", 0.01f, 5, (newValue) => {
                 Config.HUDMessageScale = newValue;
                 if(HUDMessage != null) HUDMessage.Scale = newValue;
             }, 0, false, 2));
-            editGlobalOptionsView.AddChild(HUDPositionHorizontalSlider = new SliderControl("HUD horizontal position", -1, 1, (newValue) => {
+            EditHudOptionsColumn.AddChild(HUDPositionHorizontalSlider = new SliderControl("HUD horizontal position", -1, 1, (newValue) => {
                 Config.HUDMessagePosition.X = newValue;
                 if (HUDMessage != null) HUDMessage.Origin = Config.HUDMessagePosition;
             }, 0, false, 2));
-            editGlobalOptionsView.AddChild(HUDPositionVerticalSlider = new SliderControl("HUD vertical position", -1, 1, (newValue) => {
+            EditHudOptionsColumn.AddChild(HUDPositionVerticalSlider = new SliderControl("HUD vertical position", -1, 1, (newValue) => {
                 Config.HUDMessagePosition.Y = newValue;
                 if (HUDMessage != null) HUDMessage.Origin = Config.HUDMessagePosition;
             }, 0, false, 2));
+
+            EditHudOptionsColumn.Pixels = EditHudOptionsColumn.GetContentSize();
 
             //editGlobalOptionsView.AddChild(new CheckboxControl("Do another thing", (newValue) => { }));
 
@@ -165,7 +179,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             MainContent.AddChild(EntriesView);
             MainContent.AddChild(EditView);
             EditView.AddChild(EditEntriesView);
-            EditView.AddChild(editGlobalOptionsView);
+            EditView.AddChild(editOptionsColumn);
             MainContent.AddChild(Footer);
             MainContent.AddChild(EditModeFooter);
 
@@ -205,7 +219,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             if (Config != null)
             {
+
                 //set values for global config options
+                HUDEnabledCheckbox.Value = Config.HUDMessageEnabled;
+                EditHudOptionsColumn.Enabled = Config.HUDMessageEnabled;
                 HUDScaleSlider.Value = (float)Config.HUDMessageScale;
                 HUDPositionHorizontalSlider.Value = Config.HUDMessagePosition.X;
                 HUDPositionVerticalSlider.Value = Config.HUDMessagePosition.Y;
@@ -337,11 +354,26 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
                 if (HUDMessageText != null)
                 {
-                    HUDMessage.Visible = GridStatusLCDSession.Instance.IsControlledEntity(grid);
+                    HUDMessage.Visible = IsHUDMessageVisible();
                 }
             }
 
             ForceUpdate();
+        }
+
+        private bool IsHUDMessageVisible()
+        {
+            //will only be called if canPlayerView = true
+            if(!Config.HUDMessageEnabled)
+            {
+                return false;
+            }
+
+            var grid = Block.CubeGrid;
+
+            //return GridStatusLCDSession.Instance.IsControlledEntity(grid);
+
+            return true;
         }
 
         public void Dispose()
