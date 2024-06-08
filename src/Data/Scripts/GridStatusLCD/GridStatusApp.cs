@@ -113,15 +113,15 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             editGlobalOptionsView.AddChild(HUDScaleSlider = new SliderControl("HUD scale", 0.01f, 5, (newValue) => {
                 Config.HUDMessageScale = newValue;
                 if(HUDMessage != null) HUDMessage.Scale = newValue;
-            }));
+            }, 0, false, 2));
             editGlobalOptionsView.AddChild(HUDPositionHorizontalSlider = new SliderControl("HUD horizontal position", -1, 1, (newValue) => {
                 Config.HUDMessagePosition.X = newValue;
                 if (HUDMessage != null) HUDMessage.Origin = Config.HUDMessagePosition;
-            }));
+            }, 0, false, 2));
             editGlobalOptionsView.AddChild(HUDPositionVerticalSlider = new SliderControl("HUD vertical position", -1, 1, (newValue) => {
                 Config.HUDMessagePosition.Y = newValue;
                 if (HUDMessage != null) HUDMessage.Origin = Config.HUDMessagePosition;
-            }));
+            }, 0, false, 2));
 
             //editGlobalOptionsView.AddChild(new CheckboxControl("Do another thing", (newValue) => { }));
 
