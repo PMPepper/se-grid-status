@@ -17,7 +17,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
     public class GridStatusApp : TouchApp
     {
         //General
-        private IMyCubeBlock Block;
+        private IMyTerminalBlock Block;
         private IMyCubeGrid Grid;
 
         //HUD API stuff
@@ -36,7 +36,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         ScrollView EntriesView { get; }
         ScrollView EditView { get; }
         CheckboxControl HUDEnabledCheckbox { get; }
-
+        SelectControl<PermissionLevel> PermissionViewSelectControl { get; }
+        SelectControl<PermissionLevel> PermissionEditSelectControl { get; }
         public Column EditHudOptionsColumn { get; private set; }
         SliderControl HUDScaleSlider { get; }
         SliderControl HUDPositionHorizontalSlider { get; }
@@ -54,6 +55,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         
 
 
+
         //List<AStatusEntry> Entries = new List<AStatusEntry>();
 
         public static readonly Color BgCol = new Color() { A = 10, R = 70, G = 130, B = 180 };
@@ -64,8 +66,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         {
             Script = script;
             HUDTextAPI = GridStatusLCDSession.HUDTextAPI; //store local reference
-            Block = block;
+            Block = block as IMyTerminalBlock;
             SetGrid(block.CubeGrid);
+
+            Block.OwnershipChanged += OnBlockOwnershipChanged;
 
             DefaultBg = true;
 
@@ -115,6 +119,9 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             editOptionsColumn.AddChild(HUDEnabledCheckbox = new CheckboxControl("HUD summary enabled?", (newValue) => {
                 EditHudOptionsColumn.Enabled = Config.HUDMessageEnabled = newValue;
             }));
+
+            editOptionsColumn.AddChild(PermissionViewSelectControl = new SelectControl<PermissionLevel>("Who can view this screen", Permissions.GetPossiblePermissionOptions(Block), (newValue) => { Config.ViewPermission = newValue; }));
+            editOptionsColumn.AddChild(PermissionEditSelectControl = new SelectControl<PermissionLevel>("Who can edit this screen", Permissions.GetPossiblePermissionOptions(Block), (newValue) => { Config.EditPermission = newValue; }));
 
 
             EditHudOptionsColumn = new Column();
@@ -188,6 +195,17 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             AddChild(MainContent);
         }
 
+        private void OnBlockOwnershipChanged(IMyTerminalBlock block)
+        {
+            UpdateAvailablePermissions();
+        }
+
+        private void UpdateAvailablePermissions()
+        {
+            PermissionEditSelectControl.Options = PermissionViewSelectControl.Options = Permissions.GetPossiblePermissionOptions(Block);
+
+        }
+
         public void SetConfig(GridStatusLCDConfig newConfig)
         {
             if(Config != null)
@@ -222,6 +240,9 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
                 //set values for global config options
                 HUDEnabledCheckbox.Value = Config.HUDMessageEnabled;
+                PermissionViewSelectControl.Value = Config.ViewPermission;
+                PermissionEditSelectControl.Value = Config.EditPermission;
+
                 EditHudOptionsColumn.Enabled = Config.HUDMessageEnabled;
                 HUDScaleSlider.Value = (float)Config.HUDMessageScale;
                 HUDPositionHorizontalSlider.Value = Config.HUDMessagePosition.X;
@@ -433,5 +454,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 }
             }
         }
+
+        
     }
 }
