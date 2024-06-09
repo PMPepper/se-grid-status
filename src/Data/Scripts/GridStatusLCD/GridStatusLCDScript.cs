@@ -161,8 +161,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
                 //TEMP
                 config.Entries.Add(new ShieldStatusEntry());
-                config.Entries.Add(new InventoryStatusEntry() { Name = "Ice" });
-                config.Entries.Add(new OxygenStatusEntry() { Name = "O2", GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" });
+                config.Entries.Add(new InventoryStatusEntry() { Name = "Ice", BlockFilter = new BlockFilter() });
+                config.Entries.Add(new OxygenStatusEntry() { Name = "O2", BlockFilter = new BlockFilter() { GridNameFilter = "*", GroupNameFilter = "* O2 Tanks" } });
                 //END TEMP
 
                 GridStatusLCDSession.Instance.BlockRequiresPersisting(Block as IMyCubeBlock);

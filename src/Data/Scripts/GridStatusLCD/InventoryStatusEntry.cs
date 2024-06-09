@@ -14,7 +14,7 @@ using IngameMyInventoryItem = VRage.Game.ModAPI.Ingame.MyInventoryItem;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    public class InventoryStatusEntry : ABlockFilterStatusEntry
+    public class InventoryStatusEntry : AStatusEntry
     {
         public const string TypeName = "Inventory status"; 
         [XmlAttribute]
@@ -31,6 +31,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         [XmlAttribute]
         public bool ShowOnHUD = true;
 
+        public BlockFilter BlockFilter = new BlockFilter();
+
         //"MyObjectBuilder_Ore/Ice";
         [XmlAttribute]
         public string ItemType = "Ore";
@@ -41,29 +43,38 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         
         //private vars
         private string _Name = "Inventory";
-        private GridStatusApp App;
 
         private Label Label;
         private ProgressBar StatusBar;
 
-
         //Reuse objects to reduce allocations
         private List<IngameMyInventoryItem> Items = new List<IngameMyInventoryItem>();
 
-        override public void BlockAdded(IMySlimBlock block)
+        override public void BlockAdded(IMySlimBlock block) { }
+        override public void BlockRemoved(IMySlimBlock block) { }
+        public override void Dispose()
         {
-
+            if (BlockFilter != null)
+            {
+                BlockFilter.Dispose();
+                BlockFilter = null;
+            }
+        }
+        override public void GridChanged(IMyCubeGrid newGrid)
+        {
+            if (BlockFilter != null)
+            {
+                BlockFilter.GridChanged(newGrid);
+            }
         }
 
-        override public void BlockRemoved(IMySlimBlock block)
+        override public View Init(GridStatusApp app, IMyTerminalBlock block, IMyTextSurface surface)
         {
-            
-        }
-
-        override public View Init(GridStatusApp app, IMyCubeBlock block, IMyTextSurface surface)
-        {
-            App = app;
-            Block = block;
+            if (BlockFilter != null)
+            {
+                BlockFilter.Block = block;
+                BlockFilter.BlockApplicableTest = BlockApplicableTest;
+            }
 
             View = new View();
             View.Flex = new Vector2(1, 0);
@@ -92,21 +103,26 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         override public void Update(StringBuilder hudMessageText)
         {
-            base.Update(hudMessageText);
+            float inventoryContains = 0;
 
-            //InventoryBlocks list will now have up to date list of filtered blocks
-            float inventoryContains = FilteredBlocks.Sum((block) =>
+            if (BlockFilter != null)
             {
-                Items.Clear();
-                var inventory = block.GetInventory();
-                inventory.GetItems(Items);
+                BlockFilter.Update();
 
-                return Items.Sum((item) =>
+                //InventoryBlocks list will now have up to date list of filtered blocks
+                inventoryContains = BlockFilter.FilteredBlocks.Sum((block) =>
                 {
-                    //hudMessageText.AppendLine($"{item.Type.TypeId}, {item.Type.SubtypeId}");
-                    return IsCorrectItemType(item.Type) ? (float)item.Amount : 0;
+                    Items.Clear();
+                    var inventory = block.GetInventory();
+                    inventory.GetItems(Items);
+
+                    return Items.Sum((item) =>
+                    {
+                        //hudMessageText.AppendLine($"{item.Type.TypeId}, {item.Type.SubtypeId}");
+                        return IsCorrectItemType(item.Type) ? (float)item.Amount : 0;
+                    });
                 });
-            });
+            }
 
             string statusStr = $"{inventoryContains}/{InvFull}";
 
@@ -135,22 +151,17 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         //Private methods
 
         //Checks if block can store requested item, and name matches filter
-        override protected bool IsPotentiallyValidBlock(IMyCubeBlock block)
+        private bool BlockApplicableTest(IMyTerminalBlock block)
         {
-            if(block.HasInventory)
+            if (block.HasInventory)
             {
-                if (!TestBlockNameFilter((block as IMyTerminalBlock).CustomName))
-                {
-                    return false;
-                }
-
                 //Check this inventory is capable of storing the requested item
                 var inventory = block.GetInventory();
 
                 var acceptedItems = new List<VRage.Game.ModAPI.Ingame.MyItemType>();
                 inventory.GetAcceptedItems(acceptedItems);
 
-                foreach(var itemType in acceptedItems)
+                foreach (var itemType in acceptedItems)
                 {
                     //MyAPIGateway.Utilities.ShowMessage("[GSA]: ", $"Accepted item: {itemType.TypeId} / {itemType.SubtypeId}");
                     if (IsCorrectItemType(itemType))
@@ -159,7 +170,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                     }
                 }
             }
-            
+
             return false;
         }
 

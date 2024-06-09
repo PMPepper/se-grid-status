@@ -13,7 +13,7 @@ using VRageMath;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
-    public class OxygenStatusEntry : ABlockFilterStatusEntry
+    public class OxygenStatusEntry : AStatusEntry
     {
         public const string TypeName = "Oxygen storage";
 
@@ -31,25 +31,41 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         [XmlAttribute]
         public bool ShowOnHUD = true;
 
+        public BlockFilter BlockFilter = new BlockFilter();
+
         private Label Label;
         private ProgressBar StatusBar;
 
         //private static MyDefinitionId HydrogenId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Hydrogen");
         private static MyDefinitionId OxygenId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Oxygen");
 
-        public override void BlockAdded(IMySlimBlock block)
+        public override void BlockAdded(IMySlimBlock block) { }
+        public override void BlockRemoved(IMySlimBlock block) { }
+
+        public override void Dispose()
         {
-            
+            if (BlockFilter != null)
+            {
+                BlockFilter.Dispose();
+                BlockFilter = null;
+            }
         }
 
-        public override void BlockRemoved(IMySlimBlock block)
+        override public void GridChanged(IMyCubeGrid newGrid)
         {
-            
+            if (BlockFilter != null)
+            {
+                BlockFilter.GridChanged(newGrid);
+            }
         }
 
-        public override View Init(GridStatusApp app, IMyCubeBlock block, IMyTextSurface surface)
+        public override View Init(GridStatusApp app, IMyTerminalBlock block, IMyTextSurface surface)
         {
-            Block = block;
+            if(BlockFilter != null)
+            {
+                BlockFilter.Block = block;
+                BlockFilter.BlockApplicableTest = BlockApplicableTest;
+            }
 
             View = new View();
             View.Flex = new Vector2(1, 0);
@@ -78,30 +94,36 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         override public void Update(StringBuilder hudMessageText)
         {
-            base.Update(hudMessageText);
-
             double totalCapacity = 0;
-            double containsGas = FilteredBlocks.Sum((block) => {
-                float capacity = 0;
-                double filledRatio = 0;
+            double containsGas = 0;
 
-                if(block is IMyGasTank)
-                {
-                    var tank = block as IMyGasTank;
-                    capacity = tank.Capacity;
-                    filledRatio = tank.FilledRatio;
-                } else if(block is IMyCockpit)
-                {
-                    var cockpit = block as IMyCockpit;
-                    capacity = cockpit.OxygenCapacity;
-                    filledRatio = cockpit.OxygenFilledRatio;
-                }
-                
-                totalCapacity += capacity;
-                
-                return capacity * filledRatio;
-            });
+            if (BlockFilter != null)
+            {
+                BlockFilter.Update();
 
+                containsGas = BlockFilter.FilteredBlocks.Sum((block) => {
+                    float capacity = 0;
+                    double filledRatio = 0;
+
+                    if (block is IMyGasTank)
+                    {
+                        var tank = block as IMyGasTank;
+                        capacity = tank.Capacity;
+                        filledRatio = tank.FilledRatio;
+                    }
+                    else if (block is IMyCockpit)
+                    {
+                        var cockpit = block as IMyCockpit;
+                        capacity = cockpit.OxygenCapacity;
+                        filledRatio = cockpit.OxygenFilledRatio;
+                    }
+
+                    totalCapacity += capacity;
+
+                    return capacity * filledRatio;
+                });
+            }
+            
             string statusStr = $"{Math.Floor(containsGas)}/{Math.Floor(totalCapacity)}";
 
             if (StatusBar.Value != containsGas || StatusBar.MaxValue != totalCapacity)
@@ -122,20 +144,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
         }
 
-
-        protected override bool IsPotentiallyValidBlock(IMyCubeBlock block)
+        private bool BlockApplicableTest(IMyTerminalBlock block)
         {
-            if(base.IsPotentiallyValidBlock(block))
+            if (block is IMyGasTank)
             {
-                if(block is IMyGasTank)
-                {
-                    return (block as IMyGasTank).Components.Get<MyResourceSinkComponent>().AcceptedResources.Contains(OxygenId);
-                }
-
-                return block is IMyCockpit;
+                return (block as IMyGasTank).Components.Get<MyResourceSinkComponent>().AcceptedResources.Contains(OxygenId);
             }
 
-            return false;
+            return block is IMyCockpit;
         }
     }
 }

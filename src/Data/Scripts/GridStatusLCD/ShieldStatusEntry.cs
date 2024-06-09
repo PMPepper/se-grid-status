@@ -54,7 +54,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private static char[] SPACE_PARENS = new char[3] { ' ', '(', ')' };
         private static char[] FWD_SLASH = new char[1] { '/' };
 
-        override public View Init(GridStatusApp app, IMyCubeBlock block, IMyTextSurface surface)
+        override public View Init(GridStatusApp app, IMyTerminalBlock block, IMyTextSurface surface)
         {
             App = app;
             Block = block;

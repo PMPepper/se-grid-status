@@ -28,7 +28,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private const int HUDMessageTTL = 30;
 
         //state
-        private bool IsEditing = true;
+        private bool IsEditing = false;
         private bool doResetConfigUI = false;
 
         //UI elements
@@ -571,7 +571,5 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 }
             }
         }
-
-        
     }
 }
