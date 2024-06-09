@@ -66,32 +66,35 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                     return level.ToString();
             }
         }
-        public static List<SelectOption<PermissionLevel>> GetPossiblePermissionOptions(IMyTerminalBlock block)
+        public static List<SelectOption<PermissionLevel>> GetPossiblePermissionOptions(IMyTerminalBlock block, params PermissionLevel[] exclude)
         {
-            return GetPossiblePermissions(block).Select((level) => new SelectOption<PermissionLevel>(level, level.Description())).ToList();
+            return GetPossiblePermissions(block, exclude).Select((level) => new SelectOption<PermissionLevel>(level, level.Description())).ToList();
         }
 
-        public static List<PermissionLevel> GetPossiblePermissions(IMyTerminalBlock block)
+        public static List<PermissionLevel> GetPossiblePermissions(IMyTerminalBlock block, params PermissionLevel[] exclude)
         {
             var permissions = new List<PermissionLevel>(5);
 
-            permissions.Add(PermissionLevel.Everyone);
-
-            if(CurrentPlayerHasPermissionForBlock(PermissionLevel.Allies, block)) {
+            if(!exclude.Contains(PermissionLevel.Everyone))
+            {
+                permissions.Add(PermissionLevel.Everyone);
+            }
+            
+            if(!exclude.Contains(PermissionLevel.Allies) && CurrentPlayerHasPermissionForBlock(PermissionLevel.Allies, block)) {
                 permissions.Add(PermissionLevel.Allies);
             }
 
-            if (CurrentPlayerHasPermissionForBlock(PermissionLevel.Faction, block))
+            if (!exclude.Contains(PermissionLevel.Faction) && CurrentPlayerHasPermissionForBlock(PermissionLevel.Faction, block))
             {
                 permissions.Add(PermissionLevel.Faction);
             }
 
-            if (CurrentPlayerHasPermissionForBlock(PermissionLevel.TerminalAccess, block))
+            if (!exclude.Contains(PermissionLevel.TerminalAccess) && CurrentPlayerHasPermissionForBlock(PermissionLevel.TerminalAccess, block))
             {
                 permissions.Add(PermissionLevel.TerminalAccess);
             }
 
-            if (CurrentPlayerHasPermissionForBlock(PermissionLevel.BlockOwner, block))
+            if (!exclude.Contains(PermissionLevel.BlockOwner) && CurrentPlayerHasPermissionForBlock(PermissionLevel.BlockOwner, block))
             {
                 permissions.Add(PermissionLevel.BlockOwner);
             }

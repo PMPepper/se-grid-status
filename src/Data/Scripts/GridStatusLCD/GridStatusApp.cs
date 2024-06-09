@@ -35,14 +35,16 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         View PermissionDeniedView { get; }
         View MainContent { get; }
         ScrollView EntriesView { get; }
-        ScrollView EditView { get; }
+        View EditView { get; }
+        Column EditOptionsColumn { get; }
         CheckboxControl HUDEnabledCheckbox { get; }
         SelectControl<PermissionLevel> PermissionViewSelectControl { get; }
         SelectControl<PermissionLevel> PermissionEditSelectControl { get; }
-        public Column EditHudOptionsColumn { get; private set; }
+        Column EditHudOptionsColumn { get; }
         SliderControl HUDScaleSlider { get; }
         SliderControl HUDPositionHorizontalSlider { get; }
         SliderControl HUDPositionVerticalSlider { get; }
+        SelectControl<PermissionLevel> PermissionViewHUDSelectControl { get; }
         ScrollView EditEntriesView { get; }
         Heading Header { get; }
         View Footer { get; }
@@ -54,9 +56,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         public GridStatusLCDConfig Config { get; protected set; }
         SelectControl<HUDVisibleWhen> EditHUDVisibleWhenSelect { get; }
-
-
-
+        
 
         //List<AStatusEntry> Entries = new List<AStatusEntry>();
 
@@ -101,12 +101,11 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             EntriesView.ScrollAlwaysVisible = false;
 
             //Edit view
-            EditView = new ScrollView();
+            EditView = new View();
             EditView.Pixels = Vector2.Zero;
             EditView.Flex = Vector2.One;
             EditView.Direction = ViewDirection.Row;
             EditView.Gap = DefaultSpace;
-            EditView.ScrollAlwaysVisible = false;
 
             //Edit entries view
             EditEntriesView = new ScrollView();
@@ -117,23 +116,24 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             EditEntriesView.ScrollAlwaysVisible = false;
 
             //Edit global options
-            var editOptionsColumn = new Column();
-            editOptionsColumn.Flex = new Vector2(1, 1);
-            editOptionsColumn.Pixels = new Vector2(200, 0);
-            editOptionsColumn.BgColor = BgCol;
+            EditOptionsColumn = new Column();
+            EditOptionsColumn.Flex = new Vector2(1, 1);
+            EditOptionsColumn.Pixels = new Vector2(200, 0);
+            EditOptionsColumn.BgColor = BgCol;
 
-            editOptionsColumn.AddChild(new Heading("Global options"));
-            editOptionsColumn.AddChild(HUDEnabledCheckbox = new CheckboxControl("HUD summary enabled?", (newValue) => {
+            EditOptionsColumn.AddChild(new Heading("Global options"));
+            EditOptionsColumn.AddChild(HUDEnabledCheckbox = new CheckboxControl("HUD summary enabled?", (newValue) => {
                 EditHudOptionsColumn.Enabled = Config.HUDMessageEnabled = newValue;
+
+                UpdateEditView();
             }));
 
-            editOptionsColumn.AddChild(PermissionViewSelectControl = new SelectControl<PermissionLevel>("Who can view this screen", Permissions.GetPossiblePermissionOptions(Block), (newValue) => { Config.ViewPermission = newValue; }));
-            editOptionsColumn.AddChild(PermissionEditSelectControl = new SelectControl<PermissionLevel>("Who can edit this screen", Permissions.GetPossiblePermissionOptions(Block), (newValue) => { Config.EditPermission = newValue; }));
-
+            EditOptionsColumn.AddChild(PermissionViewSelectControl = new SelectControl<PermissionLevel>("Who can view this screen", Permissions.GetPossiblePermissionOptions(Block), (newValue) => { Config.ViewPermission = newValue; }));
+            EditOptionsColumn.AddChild(PermissionEditSelectControl = new SelectControl<PermissionLevel>("Who can edit this screen", Permissions.GetPossiblePermissionOptions(Block), (newValue) => { Config.EditPermission = newValue; }));
 
             EditHudOptionsColumn = new Column();
 
-            editOptionsColumn.AddChild(EditHudOptionsColumn);
+            EditOptionsColumn.AddChild(EditHudOptionsColumn);
 
             EditHudOptionsColumn.AddChild(new Heading("HUD options"));
             EditHudOptionsColumn.AddChild(HUDScaleSlider = new SliderControl("HUD scale", 0.01f, 5, (newValue) => {
@@ -161,10 +161,16 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 )
             );
 
+            EditHudOptionsColumn.AddChild(PermissionViewHUDSelectControl = new SelectControl<PermissionLevel>(
+                "Users who can see HUD", 
+                Permissions.GetPossiblePermissionOptions(Block, PermissionLevel.Everyone), 
+                (newValue) => {
+                    Config.HUDViewPermission = newValue;
+                }
+            ));
+
             EditHudOptionsColumn.Pixels = EditHudOptionsColumn.GetContentSize();
-
-            //editGlobalOptionsView.AddChild(new CheckboxControl("Do another thing", (newValue) => { }));
-
+            
             //Footer
             Footer = new View();
             Footer.Padding = DefaultSpacing;
@@ -205,7 +211,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             MainContent.AddChild(EntriesView);
             MainContent.AddChild(EditView);
             EditView.AddChild(EditEntriesView);
-            EditView.AddChild(editOptionsColumn);
+            EditView.AddChild(EditOptionsColumn);
             MainContent.AddChild(Footer);
             MainContent.AddChild(EditModeFooter);
 
@@ -257,54 +263,65 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             if (Config != null)
             {
-
                 //set values for global config options
                 HUDEnabledCheckbox.Value = Config.HUDMessageEnabled;
                 PermissionViewSelectControl.Value = Config.ViewPermission;
                 PermissionEditSelectControl.Value = Config.EditPermission;
-
+                
                 EditHudOptionsColumn.Enabled = Config.HUDMessageEnabled;
                 HUDScaleSlider.Value = (float)Config.HUDMessageScale;
                 HUDPositionHorizontalSlider.Value = Config.HUDMessagePosition.X;
                 HUDPositionVerticalSlider.Value = Config.HUDMessagePosition.Y;
-
+                
                 EditHUDVisibleWhenSelect.Value = Config.HUDVisibleWhen;
-
+                PermissionViewHUDSelectControl.Value = Config.HUDViewPermission;
+                
                 if (HUDMessage != null)
                 {
                     HUDMessage.Scale = Config.HUDMessageScale;
                     HUDMessage.Origin = Config.HUDMessagePosition;
                 }
-
+                
                 //entries
-                for (int i = 0; i < Config.Entries.Count; i++)
+                if (Config.Entries != null)
                 {
-                    var entry = Config.Entries[i];
-                    var index = i;
-                    EntriesView.AddChild(entry.View);
-                    EditEntriesView.AddChild(new EditEntry(
-                        entry,
-                        ((index == 0)
-                            ? null as Action
-                            : () => {
-                                Config.Entries.Move(index, index - 1);
+                    for (int i = 0; i < Config.Entries.Count; i++)
+                    {
+                        var entry = Config.Entries[i];
+                        var index = i;
+                        EntriesView.AddChild(entry.View);
+                        EditEntriesView.AddChild(new EditEntry(
+                            entry,
+                            ((index == 0)
+                                ? null as Action
+                                : () => {
+                                    Config.Entries.Move(index, index - 1);
+                                    ConfigUIRequiredReset();
+                                }
+                            ),
+                            ((index == Config.Entries.Count - 1)
+                                ? null as Action
+                                : () => {
+                                    Config.Entries.Move(index, index + 2);
+                                    ConfigUIRequiredReset();
+                                }
+                            ),
+                            () => {
+                                Config.Entries.RemoveAt(index);
                                 ConfigUIRequiredReset();
                             }
-                        ),
-                        ((index == Config.Entries.Count - 1)
-                            ? null as Action
-                            : () => {
-                                Config.Entries.Move(index, index + 2);
-                                ConfigUIRequiredReset();
-                            }
-                        ),
-                        () => {
-                            Config.Entries.RemoveAt(index);
-                            ConfigUIRequiredReset();
-                        }
-                    ));
+                        ));
+                    }
                 }
+
+                UpdateEditView();
             }
+        }
+
+        private void UpdateEditView()
+        {
+            EditView.Pixels = new Vector2(EditView.Pixels.X, EditView.GetContentSize().Y);
+            
         }
 
         private void ConfigUIRequiredReset()

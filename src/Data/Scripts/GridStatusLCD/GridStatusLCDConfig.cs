@@ -17,6 +17,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
     {
         public PermissionLevel ViewPermission = PermissionLevel.TerminalAccess;
         public PermissionLevel EditPermission = PermissionLevel.BlockOwner;
+        public PermissionLevel HUDViewPermission = PermissionLevel.TerminalAccess;
         public bool HUDMessageEnabled = true;
         public Vector2 HUDMessagePosition;
         public double HUDMessageScale { get; set; } = 1;
