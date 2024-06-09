@@ -35,6 +35,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         {
             float width = 0;
             float height = 0;
+            int visibleChildren = 0;
 
             bool isRow = container.Direction == ViewDirection.Row || container.Direction == ViewDirection.RowReverse;
             bool isColumn = container.Direction == ViewDirection.Column || container.Direction == ViewDirection.ColumnReverse;
@@ -42,6 +43,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             foreach (var child in container.Children)
             {
                 var element = new View(child);
+
+                if(element.Enabled == false)
+                {
+                    continue;
+                }
+
+                visibleChildren++;
+
                 var itemWidth = element.OuterWidth();
                 var itemHeight = element.OuterHeight();
 
@@ -56,9 +65,19 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 }
             }
 
-            var totalGap = container.Children.Count > 0 ? container.Gap * (container.Children.Count - 1) : 0;
+            var totalGap = visibleChildren > 0 ? container.Gap * (visibleChildren - 1) : 0;
             
             return new Vector2(width + (isRow ? totalGap : 0), height + (isColumn ? totalGap : 0));
+        }
+
+        public static void SizeToContent(this View view)
+        {
+            var contentSize = view.GetContentSize();
+            
+            view.Pixels = new Vector2(
+                contentSize.X + view.Padding.X + view.Padding.Z + view.Border.X + view.Border.Z,
+                contentSize.Y + view.Padding.Y + view.Padding.W + view.Border.Y + view.Border.W
+            );
         }
     }
 }

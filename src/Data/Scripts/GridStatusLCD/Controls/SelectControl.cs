@@ -16,7 +16,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls
         private Selector Select { get; set; }
         private Label SelectLabel { get; set; }
 
-        public string LabelText { get { return Label?.Text; } set { if (Label != null) { Label.Text = value; } } }
+        public string LabelText { get { return Label?.Text; } set { if (Label != null) { Label.Text = value ?? ""; Label.Enabled = value != null; } } }
 
         private int _SelectedIndex;
 
@@ -46,7 +46,15 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls
             get { return SelectedIndex == -1 || Options == null ? default(T) : Options[SelectedIndex].Value; }
             set
             {
-                SelectedIndex = _Options.FindIndex((option) => value.Equals(option.Value));
+                if(value == null)
+                {
+                    SelectedIndex = -1;
+                    return;
+                }
+
+                SelectedIndex = _Options.FindIndex((option) => {
+                    return CompareValues(value, option.Value);
+                });
             }
         }
 
@@ -79,12 +87,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls
             OnChange = onChange;
 
             //Label
-            Label = new Label(label, FontSize, VRage.Game.GUI.TextPanel.TextAlignment.LEFT);
+            Label = new Label(label ?? "", FontSize, VRage.Game.GUI.TextPanel.TextAlignment.LEFT);
             Label.Flex = new Vector2(1, 0);
+            Label.Enabled = label != null;
 
             AddChild(Label);
 
             Options = options;
+            SelectedIndex = 0;
 
             //Base props
             Direction = ViewDirection.Column;
@@ -99,9 +109,18 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls
 
             OnChange(Value);
         }
+
+        private bool CompareValues(T a, T b)
+        {
+            if (a is IComparable<T>)
+            {
+                return (a as IComparable<T>) == (b as IComparable<T>);
+            }
+            return a.Equals(b);
+        }
     }
 
-    public struct SelectOption<T>
+    public class SelectOption<T>
     {
         public T Value;
         public string Label;
