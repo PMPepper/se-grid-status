@@ -55,8 +55,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         public GridStatusLCDScript Script { get; }
 
         public GridStatusLCDConfig Config { get; protected set; }
-        SelectControl<HUDVisibleWhen> EditHUDVisibleWhenSelect { get; }
-        
+        SelectControl<HUDVisibleWhen> HUDVisibleWhenSelectControl { get; }
+        public Switch OptionsSectionSwitch { get; private set; }
+        public Column EditGeneralOptionsColumn { get; }
+
 
         //List<AStatusEntry> Entries = new List<AStatusEntry>();
 
@@ -120,22 +122,33 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             EditOptionsColumn.Flex = new Vector2(1, 1);
             EditOptionsColumn.Pixels = new Vector2(200, 0);
             EditOptionsColumn.BgColor = BgCol;
+            EditOptionsColumn.Padding = new Vector4(0, 0, 0, DefaultSpace);
 
-            EditOptionsColumn.AddChild(new Heading("Global options"));
-            EditOptionsColumn.AddChild(HUDEnabledCheckbox = new CheckboxControl("HUD summary enabled?", (newValue) => {
+            OptionsSectionSwitch = new Switch(new string[] { "General options", "HUD" }, 0, (newValue) => {
+                UpdateVisibleOptions();
+            });
+            
+            EditOptionsColumn.AddChild(OptionsSectionSwitch);
+
+            EditGeneralOptionsColumn = new Column();
+
+            EditOptionsColumn.AddChild(EditGeneralOptionsColumn);
+
+            //EditGeneralOptionsColumn.AddChild(new Heading("Global options"));
+            EditGeneralOptionsColumn.AddChild(HUDEnabledCheckbox = new CheckboxControl("HUD summary enabled?", (newValue) => {
                 EditHudOptionsColumn.Enabled = Config.HUDMessageEnabled = newValue;
 
-                UpdateEditView();
+                UpdateVisibleOptions();
             }));
 
-            EditOptionsColumn.AddChild(PermissionViewSelectControl = new SelectControl<PermissionLevel>("Who can view this screen", Permissions.GetPossiblePermissionOptions(Block), (newValue) => { Config.ViewPermission = newValue; }));
-            EditOptionsColumn.AddChild(PermissionEditSelectControl = new SelectControl<PermissionLevel>("Who can edit this screen", Permissions.GetPossiblePermissionOptions(Block), (newValue) => { Config.EditPermission = newValue; }));
+            EditGeneralOptionsColumn.AddChild(PermissionViewSelectControl = new SelectControl<PermissionLevel>("Who can view this screen", Permissions.GetPossiblePermissionOptions(Block), (newValue) => { Config.ViewPermission = newValue; UpdatePermissionOptions(); }));
+            EditGeneralOptionsColumn.AddChild(PermissionEditSelectControl = new SelectControl<PermissionLevel>("Who can edit this screen", Permissions.GetPossiblePermissionOptions(Block), (newValue) => { Config.EditPermission = newValue; }));
 
             EditHudOptionsColumn = new Column();
 
             EditOptionsColumn.AddChild(EditHudOptionsColumn);
 
-            EditHudOptionsColumn.AddChild(new Heading("HUD options"));
+            //EditHudOptionsColumn.AddChild(new Heading("HUD options"));
             EditHudOptionsColumn.AddChild(HUDScaleSlider = new SliderControl("HUD scale", 0.01f, 5, (newValue) => {
                 Config.HUDMessageScale = newValue;
                 if(HUDMessage != null) HUDMessage.Scale = newValue;
@@ -149,10 +162,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 if (HUDMessage != null) HUDMessage.Origin = Config.HUDMessagePosition;
             }, 0, false, 2));
 
-            EditHudOptionsColumn.AddChild(EditHUDVisibleWhenSelect = new SelectControl<HUDVisibleWhen>(
+            EditHudOptionsColumn.AddChild(HUDVisibleWhenSelectControl = new SelectControl<HUDVisibleWhen>(
                     "HUD visible when", 
                     new List<SelectOption<HUDVisibleWhen>>() {
-                        new SelectOption<HUDVisibleWhen>(HUDVisibleWhen.Always, "When screen rendered"),
+                        new SelectOption<HUDVisibleWhen>(HUDVisibleWhen.Always, "Panel is rendered"),
                         new SelectOption<HUDVisibleWhen>(HUDVisibleWhen.InSeat, "Player in seat/bed/etc"),
                     }, 
                     (newValue) => {
@@ -221,6 +234,22 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             AddChild(PermissionDeniedView);
         }
 
+        private void UpdatePermissionOptions()
+        {
+            PermissionEditSelectControl.Options = Permissions.GetPossiblePermissionOptions(Block, Config.ViewPermission);
+            PermissionViewHUDSelectControl.Options = Permissions.GetPossiblePermissionOptions(Block, PermissionLevel.Allies > Config.ViewPermission ? PermissionLevel.Allies : Config.ViewPermission);
+            
+            if(PermissionEditSelectControl.SelectedIndex == -1)
+            {
+                PermissionEditSelectControl.SelectedIndex = 0;
+            }
+
+            if (PermissionViewHUDSelectControl.SelectedIndex == -1)
+            {
+                PermissionViewHUDSelectControl.SelectedIndex = 0;
+            }
+        }
+
         private void OnBlockOwnershipChanged(IMyTerminalBlock block)
         {
             UpdateAvailablePermissions();
@@ -254,6 +283,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             SetUIFromConfig();
         }
 
+        private void UpdateVisibleOptions()
+        {
+            OptionsSectionSwitch.Buttons[1].Enabled = Config.HUDMessageEnabled;
+
+            EditGeneralOptionsColumn.Enabled = OptionsSectionSwitch.Index == 0;
+            EditHudOptionsColumn.Enabled = OptionsSectionSwitch.Index == 1;
+        }
+
         private void SetUIFromConfig()
         {
             doResetConfigUI = false;
@@ -263,19 +300,22 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
             if (Config != null)
             {
+                UpdateVisibleOptions();
+                UpdatePermissionOptions();
+
                 //set values for global config options
                 HUDEnabledCheckbox.Value = Config.HUDMessageEnabled;
                 PermissionViewSelectControl.Value = Config.ViewPermission;
                 PermissionEditSelectControl.Value = Config.EditPermission;
+
                 
-                EditHudOptionsColumn.Enabled = Config.HUDMessageEnabled;
                 HUDScaleSlider.Value = (float)Config.HUDMessageScale;
                 HUDPositionHorizontalSlider.Value = Config.HUDMessagePosition.X;
                 HUDPositionVerticalSlider.Value = Config.HUDMessagePosition.Y;
                 
-                EditHUDVisibleWhenSelect.Value = Config.HUDVisibleWhen;
+                HUDVisibleWhenSelectControl.Value = Config.HUDVisibleWhen;
                 PermissionViewHUDSelectControl.Value = Config.HUDViewPermission;
-                
+
                 if (HUDMessage != null)
                 {
                     HUDMessage.Scale = Config.HUDMessageScale;
@@ -313,15 +353,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                         ));
                     }
                 }
-
-                UpdateEditView();
             }
-        }
-
-        private void UpdateEditView()
-        {
-            EditView.Pixels = new Vector2(EditView.Pixels.X, EditView.GetContentSize().Y);
-            
         }
 
         private void ConfigUIRequiredReset()
@@ -428,6 +460,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             //will only be called if canPlayerView = true
             if(!Config.HUDMessageEnabled)
             {
+                return false;
+            }
+
+            if(!Permissions.CurrentPlayerHasPermissionForBlock(Config.HUDViewPermission, Block)) {
                 return false;
             }
 

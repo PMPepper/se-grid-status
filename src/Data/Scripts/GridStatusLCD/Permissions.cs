@@ -17,8 +17,22 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         TerminalAccess,
         BlockOwner
     }
+
+    
     public static class Permissions
     {
+        private static PermissionLevel[] PermissionsOrder { get; } = new PermissionLevel[] {
+            PermissionLevel.Everyone,
+            PermissionLevel.Allies,
+            PermissionLevel.Faction,
+            PermissionLevel.TerminalAccess,
+            PermissionLevel.BlockOwner
+        };
+
+        //private static Dictionary<PermissionLevel, Func<bool, >>
+
+        //public static bool 
+
         public static bool CurrentPlayerHasPermissionForBlock(PermissionLevel level, IMyTerminalBlock block)
         {
             return PlayerHasPermissionForBlock(MyAPIGateway.Session.Player, level, block);
@@ -42,7 +56,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 case PermissionLevel.Faction:
                     var blockFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(block.OwnerId);
                     var playerFaction = MyAPIGateway.Session.Factions.TryGetPlayerFaction(player.IdentityId);
-
+ 
                     return blockFaction != null && blockFaction == playerFaction;
                 case PermissionLevel.Allies:
                     return relation == MyRelationsBetweenPlayerAndBlock.Owner || relation == MyRelationsBetweenPlayerAndBlock.FactionShare || relation == MyRelationsBetweenPlayerAndBlock.Friends;
@@ -66,16 +80,26 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                     return level.ToString();
             }
         }
-        public static List<SelectOption<PermissionLevel>> GetPossiblePermissionOptions(IMyTerminalBlock block, params PermissionLevel[] exclude)
+        public static List<SelectOption<PermissionLevel>> GetPossiblePermissionOptions(IMyTerminalBlock block, PermissionLevel minimum = PermissionLevel.Everyone)
         {
-            return GetPossiblePermissions(block, exclude).Select((level) => new SelectOption<PermissionLevel>(level, level.Description())).ToList();
+            return GetPossiblePermissions(block, minimum).Select((level) => new SelectOption<PermissionLevel>(level, level.Description())).ToList();
         }
 
-        public static List<PermissionLevel> GetPossiblePermissions(IMyTerminalBlock block, params PermissionLevel[] exclude)
+        public static List<PermissionLevel> GetPossiblePermissions(IMyTerminalBlock block, PermissionLevel minimum = PermissionLevel.Everyone)
         {
-            var permissions = new List<PermissionLevel>(5);
+            var permissions = new List<PermissionLevel>(PermissionsOrder.Length);
 
-            if(!exclude.Contains(PermissionLevel.Everyone))
+            for(int i = Array.FindIndex(PermissionsOrder, (curLevel) => curLevel == minimum); i < PermissionsOrder.Length; i++)
+            {
+                var level = PermissionsOrder[i];
+
+                if(CurrentPlayerHasPermissionForBlock(level, block))
+                {
+                    permissions.Add(level);
+                }
+            }
+
+            /*if(!exclude.Contains(PermissionLevel.Everyone))
             {
                 permissions.Add(PermissionLevel.Everyone);
             }
@@ -97,7 +121,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             if (!exclude.Contains(PermissionLevel.BlockOwner) && CurrentPlayerHasPermissionForBlock(PermissionLevel.BlockOwner, block))
             {
                 permissions.Add(PermissionLevel.BlockOwner);
-            }
+            }*/
 
             return permissions;
         }
