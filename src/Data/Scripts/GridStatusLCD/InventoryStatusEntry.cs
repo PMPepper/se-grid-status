@@ -16,7 +16,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
     public class InventoryStatusEntry : ABlockFilterStatusEntry
     {
-        
+        public const string TypeName = "Inventory status"; 
         [XmlAttribute]
         override public string Name { get { return _Name; } set { if (Label != null) { Label.Text = value; } _Name = value; } }
         [XmlIgnore]
@@ -24,7 +24,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         {
             get
             {
-                return "Inventory status";
+                return TypeName;
             }
         }
 

@@ -14,12 +14,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
     public class ShieldStatusEntry : AStatusEntry
     {
+        public const string TypeName = "Energy shield strength";
+
         [XmlIgnore]
         public override string Type
         {
             get
             {
-                return "Energy shield strength";
+                return TypeName;
             }
         }
 

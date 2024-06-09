@@ -1,4 +1,5 @@
-﻿using Lima.API;
+﻿using Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls;
+using Lima.API;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -30,5 +31,12 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         abstract public void BlockAdded(IMySlimBlock block);
         abstract public void BlockRemoved(IMySlimBlock block);
         abstract public void GridChanged(IMyCubeGrid newGrid);
+
+        public static List<SelectOption<Func<AStatusEntry>>> EntryTypeOptions = new List<SelectOption<Func<AStatusEntry>>>() {
+            new SelectOption<Func<AStatusEntry>>(() => new InventoryStatusEntry(), InventoryStatusEntry.TypeName),
+            new SelectOption<Func<AStatusEntry>>(() => new OxygenStatusEntry(), OxygenStatusEntry.TypeName),
+            new SelectOption<Func<AStatusEntry>>(() => new ShieldStatusEntry(), ShieldStatusEntry.TypeName)
+
+        };
     }
 }

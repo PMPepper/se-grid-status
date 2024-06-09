@@ -15,12 +15,14 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
     public class OxygenStatusEntry : ABlockFilterStatusEntry
     {
+        public const string TypeName = "Oxygen storage";
+
         [XmlIgnore]
         public override string Type
         {
             get
             {
-                return "Oxygen storage";
+                return TypeName;
             }
         }
         private string _Heading = "Oxygen";

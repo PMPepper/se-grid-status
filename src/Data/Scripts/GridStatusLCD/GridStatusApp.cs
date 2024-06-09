@@ -59,7 +59,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         SelectControl<HUDVisibleWhen> HUDVisibleWhenSelectControl { get; }
         public Switch OptionsSectionSwitch { get; private set; }
         public Column EditGeneralOptionsColumn { get; }
-        internal SelectControl<string> AddEntrySelectControl { get; }
+        internal SelectControl<Func<AStatusEntry>> AddEntrySelectControl { get; }
 
         public static readonly Color BgCol = new Color() { A = 10, R = 70, G = 130, B = 180 };
         public static readonly int DefaultSpace = 8;
@@ -107,14 +107,21 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             AddEntryRow.BgColor = BgCol;
 
             AddEntryRow.AddChild(new Label("Add") { Flex = Vector2.Zero, Pixels = new Vector2(40, 24) });
-            AddEntryRow.AddChild(AddEntrySelectControl = new SelectControl<string>(null, new List<SelectOption<string>>() { new SelectOption<string>("Hello") }, (newValue) => {
-                Utils.WriteToClient($"Add new: {newValue}");
-            }));
+            AddEntryRow.AddChild(AddEntrySelectControl = new SelectControl<Func<AStatusEntry>>(null, AStatusEntry.EntryTypeOptions, (newValue) => {}));
 
             AddEntrySelectControl.Flex = new Vector2(0, 0);
             AddEntrySelectControl.Pixels = new Vector2(200, AddEntrySelectControl.Pixels.Y);
 
-            AddEntryRow.AddChild(new Button("Go", () => { }) { Flex = Vector2.Zero, Pixels = new Vector2(50, 24) });
+            AddEntryRow.AddChild(new Button("Go", () => {
+                if(AddEntrySelectControl.Value != null)
+                {
+                    var newEntry = AddEntrySelectControl.Value();
+                    Config.Entries.Add(newEntry);
+                    newEntry.Init(this, Block, Script.Surface as IMyTextSurface);
+
+                    ConfigUIRequiredReset();
+                }
+            }) { Flex = Vector2.Zero, Pixels = new Vector2(50, 24) });
 
             AddEntryRow.SizeToContent();
             AddEntryRow.Pixels = new Vector2(0, AddEntryRow.Pixels.Y);//This is needed because AddEntryRow.Anchor = ViewAnchor.End seems to be broken, or just work in a crazy way
