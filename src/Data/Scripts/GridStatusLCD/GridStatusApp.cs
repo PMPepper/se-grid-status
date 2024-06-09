@@ -53,7 +53,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         public GridStatusLCDScript Script { get; }
 
         public GridStatusLCDConfig Config { get; protected set; }
-        
+        SelectControl<HUDVisibleWhen> EditHUDVisibleWhenSelect { get; }
+
 
 
 
@@ -147,6 +148,18 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 Config.HUDMessagePosition.Y = newValue;
                 if (HUDMessage != null) HUDMessage.Origin = Config.HUDMessagePosition;
             }, 0, false, 2));
+
+            EditHudOptionsColumn.AddChild(EditHUDVisibleWhenSelect = new SelectControl<HUDVisibleWhen>(
+                    "HUD visible when", 
+                    new List<SelectOption<HUDVisibleWhen>>() {
+                        new SelectOption<HUDVisibleWhen>(HUDVisibleWhen.Always, "When screen rendered"),
+                        new SelectOption<HUDVisibleWhen>(HUDVisibleWhen.InSeat, "Player in seat/bed/etc"),
+                    }, 
+                    (newValue) => {
+                        Config.HUDVisibleWhen = newValue;
+                    }
+                )
+            );
 
             EditHudOptionsColumn.Pixels = EditHudOptionsColumn.GetContentSize();
 
@@ -255,7 +268,9 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 HUDPositionHorizontalSlider.Value = Config.HUDMessagePosition.X;
                 HUDPositionVerticalSlider.Value = Config.HUDMessagePosition.Y;
 
-                if(HUDMessage != null)
+                EditHUDVisibleWhenSelect.Value = Config.HUDVisibleWhen;
+
+                if (HUDMessage != null)
                 {
                     HUDMessage.Scale = Config.HUDMessageScale;
                     HUDMessage.Origin = Config.HUDMessagePosition;
@@ -399,9 +414,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 return false;
             }
 
-            var grid = Block.CubeGrid;
-
-            //return GridStatusLCDSession.Instance.IsControlledEntity(grid);
+            if(Config.HUDVisibleWhen == HUDVisibleWhen.InSeat)
+            {
+                return GridStatusLCDSession.Instance.IsControlledEntity(Block.CubeGrid);
+            }
 
             return true;
         }

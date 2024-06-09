@@ -7,6 +7,12 @@ using VRageMath;
 
 namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 {
+    public enum HUDVisibleWhen
+    {
+        Always,
+        InSeat
+    }
+
     public class GridStatusLCDConfig
     {
         public PermissionLevel ViewPermission = PermissionLevel.TerminalAccess;
@@ -14,6 +20,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         public bool HUDMessageEnabled = true;
         public Vector2 HUDMessagePosition;
         public double HUDMessageScale { get; set; } = 1;
+        public HUDVisibleWhen HUDVisibleWhen;
         public List<AStatusEntry> Entries { get; set; } = new List<AStatusEntry>();
 
         public void Dispose()
