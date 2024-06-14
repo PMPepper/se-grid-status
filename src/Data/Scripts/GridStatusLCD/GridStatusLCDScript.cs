@@ -79,9 +79,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             Config = InitConfig();
 
             _app = new GridStatusApp(_block, this, Config);
-            _app.Theme.Scale = Math.Min(Math.Max(Math.Min(this.Surface.SurfaceSize.X, this.Surface.SurfaceSize.Y) / 512, 0.4f), 2);
             _app.Cursor.Scale = _app.Theme.Scale;
-
+            
             _terminalBlock.OnMarkForClose += BlockMarkedForClose;
         }
 

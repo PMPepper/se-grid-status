@@ -17,7 +17,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls
         public string LabelText { get { return Label?.Text; } set { if (Label != null) { Label.Text = value; } } }
         public bool Value { get { return Checkbox.Value; } set { Checkbox.Value = value; } }
 
-        public CheckboxControl(string label, Action<bool> onChange) : base(ViewDirection.Row)
+        public CheckboxControl(string label, Action<bool> onChange, bool value = false) : base(ViewDirection.Row)
         {
             Label = new Label(label, FontSize, VRage.Game.GUI.TextPanel.TextAlignment.LEFT);
             Label.Flex = new Vector2(1);
@@ -25,6 +25,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls
             Checkbox = new Checkbox(onChange);
             Checkbox.Flex = new Vector2(0, 0);
             Checkbox.Pixels = new Vector2(Label.OuterHeight());
+            Checkbox.Value = value;
             
             AddChild(Checkbox);
             AddChild(Label);

@@ -1,4 +1,5 @@
-﻿using Lima.API;
+﻿using Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls;
+using Lima.API;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -148,6 +149,20 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         override public void GridChanged(IMyCubeGrid newGrid)
         {
 
+        }
+
+        public override View GetEditEntryModal()
+        {
+            var modal = new ModalDialog(App, $"Edit {Name} ({Type})", new ActionType[] {
+                new ActionType("Save", () => { Utils.WriteToClient("Save"); }),
+                new ActionType("Cancel", () => { Utils.WriteToClient("Cancel"); }),
+            });
+
+            modal.Content.AddChild(new CheckboxControl("Include in HUD", (newValue) => {
+                ShowOnHUD = newValue;
+            }, ShowOnHUD));
+
+            return modal;
         }
 
         //Private methods

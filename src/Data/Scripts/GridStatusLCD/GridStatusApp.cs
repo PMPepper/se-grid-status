@@ -24,12 +24,12 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         private HudAPIv2 HUDTextAPI;
         private HudAPIv2.HUDMessage HUDMessage;
         private StringBuilder HUDMessageText = new StringBuilder();
-        private Vector2 HUDMessagePosition = new Vector2(0.5f, 1);//0 = center, 1/-1 = edges
         private const int HUDMessageTTL = 30;
 
         //state
-        private bool IsEditing = false;
+        private bool IsEditing = true;
         private bool doResetConfigUI = false;
+        private List<Action> DeferredActions = new List<Action>();
 
         //UI elements
         View PermissionDeniedView { get; }
@@ -64,14 +64,19 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         public static readonly Color BgCol = new Color() { A = 10, R = 70, G = 130, B = 180 };
         public static readonly int DefaultSpace = 8;
         public static readonly Vector4 DefaultSpacing = new Vector4(DefaultSpace);
+        public IMyTextSurface Surface { get; private set; }
+        private View EditEntryModal { get; set; }
 
         public GridStatusApp(IMyCubeBlock block, GridStatusLCDScript script, GridStatusLCDConfig config) : base(block, script.Surface)
         {
+            //TODO Theme.Scale adjust?
+
             Script = script;
+            Surface = script.Surface as IMyTextSurface;
             HUDTextAPI = GridStatusLCDSession.HUDTextAPI; //store local reference
             Block = block as IMyTerminalBlock;
             SetGrid(block.CubeGrid);
-
+            
             Block.OwnershipChanged += OnBlockOwnershipChanged;
 
             DefaultBg = true;
@@ -217,7 +222,9 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             Footer.Direction = ViewDirection.Row;
             Footer.Alignment = ViewAlignment.End;
 
-            EditModeBtn = new Button("Edit", () => IsEditing = true);
+            EditModeBtn = new Button("Edit", () => {
+                IsEditing = true;
+            });
 
             Footer.AddChild(EditModeBtn);
 
@@ -230,12 +237,22 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             EditModeFooter.Direction = ViewDirection.Row;
             EditModeFooter.Alignment = ViewAlignment.End;
             EditModeFooter.Gap = DefaultSpace;
-
+            
             EditModeApplyBtn = new Button("Save", () => {
+                if (EditEntryModal != null)
+                {
+                    return;
+                }
+
                 IsEditing = false;
                 GridStatusLCDSession.Instance.BlockRequiresPersisting(Block);
             });//TODO actually apply/cancel(?) the changes?
             EditModeCancelBtn = new Button("Cancel", () => {
+                if (EditEntryModal != null)
+                {
+                    return;
+                }
+
                 IsEditing = false;
                 SetConfig(GridStatusLCDSession.Instance.GetPersistedState(Script));
             });
@@ -359,6 +376,10 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                             ((index == 0)
                                 ? null as Action
                                 : () => {
+                                    if (EditEntryModal != null)
+                                    {
+                                        return;
+                                    }
                                     Config.Entries.Move(index, index - 1);
                                     ConfigUIRequiredReset();
                                 }
@@ -366,13 +387,30 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                             ((index == Config.Entries.Count - 1)
                                 ? null as Action
                                 : () => {
+                                    if (EditEntryModal != null)
+                                    {
+                                        return;
+                                    }
                                     Config.Entries.Move(index, index + 2);
                                     ConfigUIRequiredReset();
                                 }
                             ),
                             () => {
+                                if (EditEntryModal != null)
+                                {
+                                    return;
+                                }
                                 Config.Entries.RemoveAt(index);
                                 ConfigUIRequiredReset();
+                            },
+                            () => {
+                                if (EditEntryModal != null)
+                                {
+                                    return;
+                                }
+                                DeferredActions.Add(() => {
+                                    SetEditEntryModal(entry.GetEditEntryModal());
+                                });
                             }
                         ));
                     }
@@ -380,6 +418,19 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             }
 
             EditEntriesView.AddChild(AddEntryRow);
+        }
+
+        private void SetEditEntryModal(View editModal)
+        {
+            if(EditEntryModal != null)
+            {
+                EditEntryModal.Parent?.RemoveChild(EditEntryModal);
+                EditEntryModal = null;
+            }
+
+            EditEntryModal = editModal;
+
+            MainContent.AddChild(EditEntryModal);
         }
 
         private void ConfigUIRequiredReset()
@@ -480,6 +531,16 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                     HUDMessage.Visible = IsHUDMessageVisible();
                 }
             }
+
+            foreach(var action in DeferredActions)
+            {
+                if (action != null)
+                {
+                    action();
+                }
+            }
+
+            DeferredActions.Clear();
 
             ForceUpdate();
         }

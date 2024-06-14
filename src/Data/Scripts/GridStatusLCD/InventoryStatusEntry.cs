@@ -1,4 +1,5 @@
-﻿using Lima.API;
+﻿using Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls;
+using Lima.API;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System;
@@ -50,6 +51,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         //Reuse objects to reduce allocations
         private List<IngameMyInventoryItem> Items = new List<IngameMyInventoryItem>();
 
+        private GridStatusApp App;
+
         override public void BlockAdded(IMySlimBlock block) { }
         override public void BlockRemoved(IMySlimBlock block) { }
         public override void Dispose()
@@ -70,6 +73,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         override public View Init(GridStatusApp app, IMyTerminalBlock block, IMyTextSurface surface)
         {
+            App = app;
+
             if (BlockFilter != null)
             {
                 BlockFilter.Block = block;
@@ -145,6 +150,18 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 TextUtils.TextBar(hudMessageText, inventoryContains / InvFull, 20);
                 hudMessageText.Append('\n');
             }
+        }
+
+
+
+        public override View GetEditEntryModal()
+        {
+            var modal = new ModalDialog(App, $"Edit {Name} ({Type})", new ActionType[] {
+                new ActionType("Save", () => { Utils.WriteToClient("Save"); }),
+                new ActionType("Cancel", () => { Utils.WriteToClient("Cancel"); }),
+            });
+
+            return modal;
         }
 
 

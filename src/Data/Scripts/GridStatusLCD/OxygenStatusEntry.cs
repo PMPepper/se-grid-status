@@ -1,4 +1,5 @@
-﻿using Lima.API;
+﻿using Grid_Status_Screen.src.Data.Scripts.GridStatusLCD.Controls;
+using Lima.API;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
@@ -39,6 +40,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
         //private static MyDefinitionId HydrogenId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Hydrogen");
         private static MyDefinitionId OxygenId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Oxygen");
 
+        private GridStatusApp App;
+
         public override void BlockAdded(IMySlimBlock block) { }
         public override void BlockRemoved(IMySlimBlock block) { }
 
@@ -61,6 +64,8 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
 
         public override View Init(GridStatusApp app, IMyTerminalBlock block, IMyTextSurface surface)
         {
+            App = app;
+
             if(BlockFilter != null)
             {
                 BlockFilter.Block = block;
@@ -142,6 +147,16 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 TextUtils.TextBar(hudMessageText, (float)(containsGas / totalCapacity), 20);
                 hudMessageText.Append('\n');
             }
+        }
+
+        public override View GetEditEntryModal()
+        {
+            var modal = new ModalDialog(App, $"Edit {Name} ({Type})", new ActionType[] {
+                new ActionType("Save", () => { Utils.WriteToClient("Save"); }),
+                new ActionType("Cancel", () => { Utils.WriteToClient("Cancel"); }),
+            });
+
+            return modal;
         }
 
         private bool BlockApplicableTest(IMyTerminalBlock block)

@@ -12,7 +12,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
     {
         public AStatusEntry Entry { get; }
 
-        public EditEntry(AStatusEntry entry, Action onMoveUp, Action onMoveDown, Action onRemove) : base(ViewDirection.Row)
+        public EditEntry(AStatusEntry entry, Action onMoveUp, Action onMoveDown, Action onRemove, Action onEdit) : base(ViewDirection.Row)
         {
             Entry = entry;
 
@@ -41,7 +41,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
                 entry.Name = newValue;
             };
 
-            var editBtn = new Button("Edit", () => { });//TODO, do something when clicked
+            var editBtn = new Button("Edit", onEdit);
             StyleBtn(editBtn);
             
             var upBtn = new Button("Up", onMoveUp);
@@ -76,6 +76,11 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             btn.Pixels = new Vector2(50, btn.Pixels.Y);
 
             btn.Margin = VRageMath.Vector4.Zero;
+        }
+
+        public void Dispose()
+        {
+
         }
     }
 }

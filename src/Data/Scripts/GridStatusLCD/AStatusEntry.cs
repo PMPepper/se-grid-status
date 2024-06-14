@@ -38,5 +38,7 @@ namespace Grid_Status_Screen.src.Data.Scripts.GridStatusLCD
             new SelectOption<Func<AStatusEntry>>(() => new ShieldStatusEntry(), ShieldStatusEntry.TypeName)
 
         };
+
+        abstract public View GetEditEntryModal();
     }
 }
